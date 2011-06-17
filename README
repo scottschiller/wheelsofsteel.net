@@ -1,0 +1,64 @@
+/*
+ * DJ Schill's adventures on the wheels of steel
+ * A browser-based turntable prototype / toy
+ * (Not for serious/skratch DJs given latency etc.)
+ * Code is provided "as-is", unsupported and without warranty.
+ * ------------------------------------------------------------
+ * http://wheelsofsteel.net/
+ * http://schillmania.com/content/entries/2011/wheels-of-steel/
+ *
+ * HTML + CSS + JS UI, uses SoundManager 2 API
+ * http://schillmania.com/projects/soundmanager2/
+ *
+ * Hardware acceleration needed for a usable UI.
+ * Scratch is laggy on Windows due to Flash/OS
+ * latency (and/or I'm doing it wrong.)
+*/
+
+* SoundManager 2 Notes
+
+This uses the SoundManager 2 audio API, with a special Flash 10 build of the SWF that adds highly-experimental audio manipulation routines. (I don't recommend it for general use. You have been warned.)
+
+If you need help getting SM2 up and running, refer to the SM2 homepage and/or troubleshooting sections.
+
+http://www.schillmania.com/projects/soundmanager2/doc/getstarted/#troubleshooting
+
+If you're having problems with offline, refer to the "Live debug output" section, re: file:// and offline use.
+
+* General Security Disclaimer
+
+PHP files live in the utils/ subdirectory. Consider security implications before simply uploading this to some webserver blindly, etc.
+
+To enable PHP things, firstly, you will need to edit the utils/include/referrer_check.php file and remove the "exit" line at the top of the file.
+
+Also, consider potential attack/abuse cases if these files are made available on your server. While some basic type checking is in place, file read/writes are performed and there is no guarantee against vulnerabilities.
+
+* SoundCloud API bits
+
+If you want to talk to the SoundCloud API, don't forget to sign up and get an application/developer API key/ID thingy - then put the key into the utils/include/SC_API_KEY.php file as such:
+
+  function get_soundcloud_api_key() {
+
+    // your soundcloud API key goes here.
+    return "MY_SOUNDCLOUD_API_KEY";
+
+  }
+
+Some basic caching is in place for API calls, so keep that in mind if you want more or less-static content.
+
+* Utilities / Waveform generation: External binaries required
+
+Both the "LAME" and "OptiPNG" libraries (both F/OSS-ish) are required for the waveform PHP file to do its thing of decoding, creating and compressing the resulting waveform images.
+
+The scripts look for the binaries in the utils/waveform/bin/ subdirectory by default - which is probably dumb, but you're smarter and can do better, or something. :D
+
+http://lame.sourceforge.net/
+http://optipng.sourceforge.net/
+
+* Waveform generation notes
+
+This bit is somewhat hackish.
+
+Source MP3 filenames are under the "tunes/" subdirectory, and their names get munged slightly, eg., spaces become _ and so forth. Modify to taste. Enable debug output via HTTP headers or add your own debugging for troubleshooting purposes.
+
+If it looks like you're opening files from the local file system eg., file:// and so forth on the client, JavaScript will attempt to load the PNG images directly from the utils/waveform/cache directory.

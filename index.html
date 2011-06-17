@@ -1,0 +1,763 @@
+﻿<!DOCTYPE html>
+<!-- FYI: This HTML document only uses two "real" HTML5 elements; <input type="range" /> and Audio(). -->
+<html>
+<head>
+<!--
+/*
+ * DJ Schill's adventures on the wheels of steel
+ * A browser-based turntable prototype / toy
+ * (Not for serious/skratch DJs given latency etc.)
+ * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ * http://wheelsofsteel.net/
+ * http://schillmania.com/content/entries/2011/wheels-of-steel/
+ *
+ * HTML + CSS + JS UI, uses SoundManager 2 API
+ * http://schillmania.com/projects/soundmanager2/
+ *
+ * Hardware acceleration needed for a usable UI.
+ * Scratch is laggy on Windows due to Flash/OS
+ * latency (and/or I'm doing it wrong.)
+*/
+-->	
+<title>The Wheels Of Steel: Turntables in your browser (a web-based DJ prototype)</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="description" content="A web browser-based turntable + mixer experiment. DJ, scratch and mix MP3s from your web browser, where supported. HTML + CSS3 + JavaScript + Flash (SoundManager 2) under the hood. BSD licensed." />
+<meta name="keywords" content="DJ, turntable, virtual dj, web DJ, scratch, mix, record, vinyl, wheels of steel, prototype, html, css, javascript, dhtml, sound, audio, audio api, soundmanager2, flash 10 audio" />
+<meta name="robots" content="all" />
+<meta name="author" content="Scott Schiller" />
+<meta name="copyright" content="Copyright (C) 2011 onwards Scott Schiller (BSD License)" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<link rel="image_src" href="http://wheelsofsteel.net/wheels_of_steel_ui_screenshot.png" />
+<link rel="stylesheet" media="screen" href="css/wheelsofsteel.css" />
+<script src="script/soundmanager2.js"></script>
+<script src="script/wheelsofsteel.js"></script>
+</head>
+
+<body>
+<!-- hide non-js fallback open state for #moreinfo, etc. -->
+<script>document.body.className='has_js';</script>
+
+<div>
+
+<div id="tt-wrapper-wrapper">
+
+<div id="tt-wrapper">
+
+<div id="tt-container">
+
+<div id="tt-1" class="turntable">
+
+ <div class="body">
+
+  <div class="platter">
+   <div class="ring"></div>
+   <div class="record">
+    <div class="record-ui">
+     <div class="slipmat"></div>
+     <div class="slipmat slipmat-y"></div>
+     <div class="slipmat slipmat-f"></div>
+     <div class="grooves"></div>
+     <div class="loader"></div>
+     <div class="label"></div>
+     <div class="label-notches"></div>
+    </div>
+    <div class="spindle"></div>
+    <div class="shiny"></div>
+    <div class="cover"></div>
+
+   </div>
+  </div>
+
+  <div class="powerlight"><div class="powerlight-on"></div></div>
+  <div class="tonearm">
+   <img src="image/table_tonearm.png" alt="" class="tonearm-image" />
+  </div>
+
+  <div class="pitch-box scratch-mode">
+   <div class="pitch">
+    <div class="label">pitch adj.</div>
+    <div class="legend">
+     <ul class="markers">
+      <li>-8<span>■</span></li>
+      <li>-</li>
+      <li>6<span>■</span></li>
+      <li>-</li>
+      <li>4<span>■</span></li>
+      <li>-</li>
+      <li>2<span>■</span></li>
+      <li>-</li>
+      <li>&mdash;</li>
+      <li>-</li>
+      <li>2<span>■</span></li>
+      <li>-</li>
+      <li>4<span>■</span></li>
+      <li>-</li>
+      <li>6<span>■</span></li>
+      <li>-</li>
+      <li>+8<span>■</span></li>
+     </ul>
+    </div>
+    <div class="rail"></div>
+
+    <div class="pitch-slider" title="Pitch control">
+     <div class="shade-top"></div>
+     <div class="shade-bottom"></div>
+     <div class="pitch-line"></div>
+    </div>
+    <div class="control-pitch-slider-text"></div>
+    <div class="pitch-box-hider">
+     <input id="tt-1-pitch-slider" class="control-pitch-slider-input" type="range" min="0" max="160" value="80" />
+    </div>
+
+   </div>
+  </div>
+
+  <div class="powerdial-led"></div>
+  <a href="#110vac" title="Power on/off" class="powerdial" onclick="return false">on / off</a>
+  <a href="#onoff" title="start/stop" class="startstop" onclick="return false">start &middot; stop</a>
+  <a href="#33rpm" title="33 RPM" class="rpm-33" onclick="return false"><span>33rpm</span></a>
+  <a href="#45rpm" title="45 RPM" class="rpm-45" onclick="return false"><span>45rpm</span></a>
+ </div>
+
+ <div id="tt-1-waveform" class="waveform">
+  <div class="loader"></div>
+  <div class="waveform-1">
+   <div class="playhead"></div>
+   <div class="playhead-arrow"></div>
+  </div>
+  <div class="waveform-2">
+   <div class="playhead-arrow compact"></div>
+  </div>
+ </div>
+
+</div>
+
+<div id="tt-2" class="turntable">
+
+ <div class="body">
+
+  <div class="platter">
+
+   <div class="ring"></div>
+   <div class="record">
+    <div class="record-ui">
+     <div class="slipmat"></div>
+     <div class="slipmat slipmat-y"></div>
+     <div class="slipmat slipmat-f"></div>
+     <div class="grooves"></div>
+     <div class="loader"></div>
+     <div class="label"></div>
+     <div class="label-notches"></div>
+    </div>
+    <div class="spindle"></div>
+    <div class="shiny"></div>
+    <div class="cover"></div>
+   </div>
+  </div>
+ 
+  <div class="powerlight"><div class="powerlight-on"></div></div>
+
+  <div class="tonearm">
+   <img src="image/table_tonearm.png" alt="" class="tonearm-image" />
+  </div>
+
+  <div class="pitch-box scratch-mode">
+   <div class="pitch">
+    <div class="label">pitch adj.</div>
+    <div class="legend">
+     <ul class="markers">
+      <li>-8<span>■</span></li>
+      <li>-</li>
+      <li>6<span>■</span></li>
+      <li>-</li>
+      <li>4<span>■</span></li>
+      <li>-</li>
+      <li>2<span>■</span></li>
+      <li>-</li>
+      <li>&mdash;</li>
+      <li>-</li>
+      <li>2<span>■</span></li>
+      <li>-</li>
+      <li>4<span>■</span></li>
+      <li>-</li>
+      <li>6<span>■</span></li>
+      <li>-</li>
+      <li>+8<span>■</span></li>
+     </ul>
+    </div>
+    <div class="rail"></div>
+    <div class="pitch-slider">
+     <div class="shade-top"></div>
+     <div class="shade-bottom"></div>
+     <div class="pitch-line"></div>
+    </div>
+    <div class="control-pitch-slider-text"></div>
+    <div class="pitch-box-hider">
+     <input id="tt-2-pitch-slider" class="control-pitch-slider-input" type="range" min="0" max="160" value="80" />
+    </div>
+   </div>
+  </div>
+
+  <div class="powerdial-led"></div>
+  <a href="#110vac" title="Power on/off" class="powerdial" onclick="return false">on / off</a>
+  <a href="#onoff" title="start/stop" class="startstop" onclick="return false">start &middot; stop</a>
+  <a href="#33rpm" title="33 RPM" class="rpm-33" onclick="return false"><span>33rpm</span></a>
+  <a href="#45rpm" title="45 RPM" class="rpm-45" onclick="return false"><span>45rpm</span></a>
+
+ </div>
+
+ <div id="tt-2-waveform" class="waveform">
+  <div class="loader"></div>
+  <div class="waveform-1">
+   <div class="playhead"></div>
+   <div class="playhead-arrow"></div>
+  </div>
+  <div class="waveform-2">
+   <div class="playhead-arrow compact"></div>
+  </div>
+ </div>
+
+</div>
+
+<div id="mixer">
+
+ <form id="mixer-form" action="#" onsubmit="return false">
+
+ <div id="social-crap">
+  <a id="twitter" href="#twitter" title="Tweeter" onclick="return wheelsofsteel.shareOnTwitter(event)" class="tweeter">t</a> 
+  <a id="facebook" href="#facebook" title="Bookface" onclick="return wheelsofsteel.shareOnFacebook(event)" class="bookface">f</a>
+ </div>
+
+ <div id="mixer-options">
+
+  <div style="position:absolute;top:0px;left:0px;margin-top:-20px" class="scratch-mode">
+   <input id="use-eq" name="use-eq" type="checkbox" title="Toggle experimental EQ (hi/mid/low frequency filters)" /> <label for="use-eq" title="Toggle experimental EQ (hi/mid/low frequency filters)">EQ</label>
+  </div>
+
+  <div style="position:absolute;top:0px;right:0px;margin-top:-1.55em;margin-right:0.5em">
+   <a href="#y" onclick="return wheelsofsteel.nextSkin(event)" title="Change the turntable skin" style="color:#999;font-weight:normal">Y</a>
+  </div>
+
+ </div>
+
+ <!-- GAIN -->
+
+ <div id="channel-1-gain" class="mixer-panel">
+
+  <div class="bd">
+
+   <ul class="pots">
+
+    <li>
+     <input id="tt-1-gain" name="tt-1-gain" type="range" title="Gain (channel 1)" min="1" max="100" value="50" class="control-eq" data-table-id="0" data-type="gain" />
+     <div id="tt1-gain" title="Gain (channel 1)" class="pot"></div>
+    </li>
+
+   </ul>
+
+  </div>
+
+ </div>
+
+ <div id="channel-2-gain" class="mixer-panel right-panel">
+
+  <div class="bd">
+
+   <ul class="pots">
+
+    <li>
+     <input id="tt-2-gain" name="tt-2-gain" type="range" title="Gain (channel 2)" min="1" max="100" value="50" class="control-eq" data-table-id="1" data-type="gain" />
+     <div id="tt2-gain" title="Gain (channel 2)" class="pot"></div>
+    </li>
+
+   </ul>
+
+  <!-- /bd -->
+  </div>
+
+ </div>
+
+ <!-- EQ -->
+
+ <div id="channel-1-eq" class="mixer-panel scratch-mode-inline-block">
+
+  <div class="bd">
+
+   <ul class="pots">
+
+    <li>
+     <input id="tt-1-eq-2" name="tt-1-eq-2" type="range" title="Hi EQ (channel 1)" min="10" max="100" value="50" class="control-eq" data-type="eq" data-table-id="0" data-eq-offset="2" />
+     <div id="tt1-eq2" title="High EQ (channel 1)" class="pot"></div>
+    </li>
+
+    <li>
+     <input id="tt-1-eq-1" name="tt-1-eq-1" type="range" title="Mid EQ (channel 1)" min="10" max="100" value="50" class="control-eq" data-type="eq" data-table-id="0" data-eq-offset="1" />
+
+     <div id="tt1-eq1" title="Mid EQ (channel 1)" class="pot"></div>
+    </li>
+
+    <li>
+     <input id="tt-1-eq-0" name="tt-1-eq-0" type="range" title="Low EQ (channel 1)" min="10" max="100" value="50" class="control-eq" data-type="eq" data-table-id="0" data-eq-offset="0" />
+     <div id="tt1-eq0" title="Low EQ (channel 1)" class="pot"></div>
+    </li>
+ 
+   </ul>
+
+  <!-- /bd -->
+
+  </div>
+
+ </div>
+
+ <div id="channel-2-eq" class="mixer-panel right-panel scratch-mode-inline-block">
+
+  <div class="bd">
+
+   <ul class="pots">
+
+    <li>
+
+     <input id="tt-2-eq-2" type="range" title="Hi EQ (channel 2)" min="10" max="100" value="50" class="control-eq" data-type="eq" data-table-id="1" data-eq-offset="2" />
+     <div id="tt2-eq2" title="Hi EQ (channel 2)" class="pot"></div>
+    </li>
+
+    <li>
+     <input id="tt-2-eq-1" type="range" title="Mid EQ (channel 2)" min="10" max="100" value="50" class="control-eq" data-type="eq" data-table-id="1" data-eq-offset="1" />
+     <div id="tt2-eq1" title="Mid EQ (channel 2)" class="pot"></div>
+    </li>
+
+    <li>
+     <input id="tt-2-eq-0" type="range" title="Low EQ (channel 2)" min="10" max="100" value="50" class="control-eq" data-type="eq" data-table-id="1" data-eq-offset="0" />
+     <div id="tt2-eq0" title="Low EQ (channel 2)" class="pot"></div>
+    </li>
+
+   </ul>
+
+  <!-- /bd -->
+  </div>
+
+ </div>
+
+ <!-- upfaders -->
+
+ <div class="mixer-panel">
+  <div class="bd">
+   <div id="upfader-1" class="upfader" data-id="tt-1-upfader">
+    <div class="upfader-ui" title="Upfader (channel 1)">
+     <div class="rail"></div>
+     <div class="upfader-slider">
+      <div class="shade-top"></div>
+      <div class="shade-bottom"></div>
+      <div class="line"></div>
+      <div class="upfader-cover" data-id="tt-1-upfader"></div>
+     </div>
+    </div>
+    <input id="tt-1-upfader" type="range" title="Upfader (channel 1)" min="1" max="100" value="75" class="control-upfader" data-type="upfader" data-table-id="0" data-id="tt-1-upfader" />
+   </div>
+  </div>
+ </div>
+
+ <div class="mixer-panel right-panel">
+  <div class="bd">
+   <div id="upfader-2" class="upfader" data-id="tt-2-upfader">
+    <div class="upfader-ui" title="Upfader (channel 2)">
+     <div class="rail"></div>
+     <div class="upfader-slider">
+      <div class="shade-top"></div>
+      <div class="shade-bottom"></div>
+      <div class="line"></div>
+      <div class="upfader-cover" data-id="tt-2-upfader"></div>
+     </div>
+    </div>
+    <input id="tt-2-upfader" type="range" min="1" max="100" value="75" class="control-upfader" data-type="upfader" data-table-id="1" data-id="tt-2-upfader" />
+   </div>
+  </div>
+ </div>
+
+ <!-- crossfader -->
+
+ <div class="x-fader-panel mixer-panel full-panel">
+  <div class="bd">
+
+   <div id="crossfader-1" class="crossfader" data-id="crossfader-1">
+    <div class="crossfader-ui" title="Crossfader" >
+     <div class="rail"></div>
+     <div class="crossfader-slider">
+      <div class="shade-top"></div>
+      <div class="shade-bottom"></div>
+      <div class="line"></div>
+      <div class="crossfader-cover" data-id="crossfader-1"></div>
+     </div>
+    </div>
+    <input id="control-xfader" name="control-xfader" type="range" title="Crossfader" min="0" max="100" value="50" class="x-fader" />
+   </div>
+
+  </div>
+
+  <!-- <p style="margin-top:0.5em;margin-bottom:1.5em">x-fader</p> -->
+ </div>
+
+ </form>
+
+</div>
+
+<form id="loader-form-1" action="." method="get" class="loader-form">
+ <input id="loader-form-1-unload" type="button" title="Unload track" value="X" />
+ <input id="track1" name="track1" type="text" value="" title="MP3 URL or SoundCloud ID to load (turntable 1)" autocomplete="false" spellcheck="false" onfocus="this.select()" />
+ <input id="loader-form-1-submit" type="submit" title="Load this URL" value="&rarr;" />
+</form>
+
+<form id="loader-form-2" action="." method="get" class="loader-form">
+ <input id="loader-form-2-unload" type="button" title="Unload track" value="X" />
+ <input id="track2" name="track2" type="text" value="" title="MP3 URL or SoundCloud ID to load (turntable 2)" autocomplete="false" spellcheck="false" onfocus="this.select()" />
+ <input id="loader-form-2-submit" type="submit" title="Load this URL" value="&rarr;" />
+</form>
+
+<!-- /tt-container -->
+
+</div>
+
+<!-- /tt-wrapper -->
+</div>
+
+<!-- /tt-wrapper-wrapper -->
+</div>
+
+<!-- GENERAL DISCLAIMER: Sorry, it's going to get a little Dreamweaver-y in here at points on the non-turntable content with inline style stuff. -->
+
+<div id="content">
+
+ <div id="info">
+
+  <div id="control-stats">Spinning up The Wheels Of Steel<noscript> (JavaScript required)</noscript>... <img src="image/icon_loading_spinner_6699cc.gif" alt="" style="vertical-align:middle;width:32px;height:32px" /><!-- buffer, fps etc. end up here --></div>
+
+  <div id="controls">
+
+   <p id="moreinfo">
+   <a id="moreinfo-link" href="#more">More info <span class="toggle"><span><b>&#9835;</b></span></span> <span style="font-size:20px;font-weight:normal">&laquo;</span> <span style="color:rgba(255,255,255,0.5)">New? Start here.</span></a>
+   </p>
+
+ <div class="controls-wrapper">
+
+  <div class="controls-wrapper-heading">
+
+   <h1>Welcome to The Wheels Of Steel: Turntables in your browser <br /><span style="color:rgba(255,255,255,0.33)">(a Web-based DJ prototype)</span></h1>
+
+   <div style="margin-bottom:1.5em;margin-top:-0.5em">
+
+    <p><b>What are the features like?</b> See a quick <a href="http://bit.ly/kikTFp" data-real-href="http://www.youtube.com/watch?v=F3OfmtE7qL4">demo video</a> of cueing, pitch bending and beat matching using scratch mode.</p>
+
+   </div>
+
+  </div>
+
+ <div class="controls-wrapper-content">
+
+  <div class="first-column">
+
+   <h2>The basics: Controls</h2>
+
+   <p class="keys" style="line-height:1.6em"><b>Left-click</b> a track to load it on the left turntable. <b>Right-click</b> or <b>shift + click</b> for the right turntable. Click and drag the needle to seek while the record is playing. If you're one of the "cool kids", you will see "scratch mode" which gives you more realistic DJ features like the <a href="http://bit.ly/kikTFp" data-real-href="http://www.youtube.com/watch?v=F3OfmtE7qL4">demo video</a>.</p>
+
+   <ul id="keycontrols" class="keys">
+    <li><b>&larr;</b> <b>&uarr;</b> <b>&rarr;</b> - Crossfader</li>
+    <li><b>[</b> <b>]</b> - Pseudo-transform (cross-fader cut / override)</li>
+    <li><b>1...5</b> / <b>6...0</b>: Cue points for left / right deck while playing. First keypress = set cue point, second = recall.<br />
+     <b>shift+1</b> = set/update existing point #1, <b>ctrl+1</b> = delete.</li>
+    <li><b>-</b> / <b>+</b>: "Nudge" pitch, adjust speed. Use <b>shift</b> for right turntable. (Scratch mode only.)</li>
+    <li><b>&lt;</b> / <b>&gt;</b>: Start/stop button. +<b>shift</b> to use power dial.</li>
+    <li><b>d</b>: Debug (outline) mode.</li>
+    <li><b>double-click</b> a slider or rotary knob to reset it.</li>
+   </ul>
+
+   <h2>Tips &amp; Tricks</h2>
+
+   <p>(Note that scratch and pitch bending are only available in "scratch mode".)</p>
+
+   <p><b>Scratching and precision</b> <br />Once you grab the record, the mouse can move anywhere within the screen without losing position. The closer to the outside of the record, the smoother the mouse movement and scratching effects are.</p>
+
+   <p><b>Record backspin</b> <br />Grab the record with the mouse and throw it forward or backward for a spin effect. During a backspin, the record will take slightly longer to catch up when it is near zero-velocity. Combine backspin with cue points as a fun way to loop beats.</p>
+
+   <p><b>Pausing the record</b> <br />If you click and release without moving the mouse, the record will simply pause. This is handy when you want to briefly delay the record without losing tempo. Super-fast clicks can substitute for pitch bending in some cases.</p>
+
+   <p><b>Cue point "drum machine"</b> <br />While on the left deck, use the number keys <b class="key">1</b> through <b class="key">5</b> to set cue points (shown as pieces of tape on the record) on bass drums, snares, hi-hats as they happen (look at the waveforms for timing) - and then press those keys again to play those sounds. You can cut, mix and match samples to make your own sequences or drum beats. Combine with brake effects, backspins etc. for even more fun. To  over-write an existing cue point, use <b class="key">shift</b> + <b class="key">1</b>. You can also set cue points when the power is off.</p>
+
+   <p><b>Power scratch / beat juggling effects</b> <br />Cheat real-world turntable physics by setting a cue point (eg. <b class="key">1</b>) on a bass drum sound, then scratching over that sound; let the beat run for a bar or two, then hit <b class="key">1</b> and click + drag to seamlessly scratch from the beginning of the loop as though you were beat juggling two copies of the same record.</p>
+
+   <p><b>Power brake mix</b> <br />When a snare or bass drum plays, press <b class="key">&lt;</b> to stop the left deck's motor and produce an electronic brake sound effect; combine this with <b class="key">&larr;</b> to cut the cross-fader to the left deck to play just this sound, then hit <b class="key">&darr;</b> or <b class="key">&rarr;</b> to bring the other turntable back into the mix for the next beat. Using <b class="key">shift</b> + <b class="key">&darr;</b> turns the power off, letting the motor spin down - a longer-running sound than stopping the motor.</p>
+
+   <p><b>Quick pitch bending</b> <br />To match the other record, grab the pitch slider and drastically change the record speed (e.g., if behind, speed it up +6%); as it nears being in sync, bring it back towards the matching speed (e.g., +1%.)</p>
+
+   <h2>Bonus URL parameters</h2>
+
+   <ul>
+    <li><a href="?scratch=1#more" class="exclude">?scratch=1</a>: Force scratch mode <i>on</i></li>
+
+    <li><a href="?scratch=0#more" class="exclude">?scratch=0</a>: Force scratch mode <i>off</i></li>
+    <li><a href="?debug=1#more" class="exclude">?debug=1</a>: Enable script + UI debug mode</li>
+    <li><a href="?html5audio=1#more" class="exclude">?html5audio=1</a>: Enable HTML5 audio support</li>
+    <li><a href="?raf=1#more" class="exclude">?raf=1</a>: Enable <code>requestAnimationFrame()</code> support</li>
+    <li><a href="?tripmat=1#more" class="exclude">?tripmat=1</a>: "Tripmat" slipmat (<i>like, woah, man.</i>)</li>
+    <li><a href="?skin=yahoo#more" class="exclude">?skin=yahoo</a>: Yahoo!-themed turntable skin</li>
+    <li><a href="?skin=flickr#more" class="exclude">?skin=flickr</a>: Flickr-themed slipmats</li>
+   </ul>
+
+  </div>
+
+<div class="second-column">
+
+   <h2>Cool kids* get the cool experience.</h2>
+
+   <h3>*(As of 06/2011): Safari 5 or Chrome 12, OS X</h3>
+
+    <p>There are two things that will determine your experience here:</p>
+
+    <ol>
+     <li>Hardware (GPU) acceleration support.</li>
+     <li>Flash audio latency ( i.e., not using Windows? :/ )</li>
+    </ol>
+
+    <p>Both vary based on hardware, OS, drivers and browser.</p>
+
+    <p>This prototype won't work for everyone - in fact, it's presently best with Safari 5 or Chrome 12 on OS X. If your browser supports "accelerated rendering" or similar GPU-based layout, you should be able to run "scratch mode" which includes pitch bending, scratching and EQ effects.</p>
+
+    <p>Audio latency (lag) will vary depending on your operating system and browser, with advance apologies to Windows users who may get 300+ milliseconds. Sorry, it's apparently an OS-level issue. If your browser can't render nice framerates, audio will be intolerable in scratch mode; you'll get an option to fall back to basic non-scratch mode, which will at least have normal-sounding audio playback.</p>
+
+   <h2>FAQ-type things</h2>
+
+   <p><b>This thing looks broken in my browser. Is there a bug?</b></p>
+
+   <p>This is an experimental demo, rough around the edges, and things may break badly in some browsers. Firefox 4, Safari 5 and Chrome 12 on WinXP + OS X were the primary browsers used and tested during development. (IE 9 and a preview of 10 were tested briefly.) Your mileage may vary with others.</p>
+
+   <p><b>The turntables are slow and my CPU maxes out, that's not very fun. Can this be made faster?</b></p>
+
+   <p>Modern hardware and software is really needed for this demo to perform well. For the best performance, your browser should support hardware acceleration (which depends on your OS and graphics driver support, also.) The demo runs OK on my 2008-era Mac Mini with Safari, but is notably smoother on a new Macbook Pro.</p>
+
+   <p>Regardless of your setup, if you get stuttering audio it may help to close other tabs and graphics-heavy applications while trying out the demo.</p>
+
+   <p><b>Scratching sounds kinda glitchy and low-quality. What's up?</b></p>
+
+   <p>There is a direct correlation between audio quality and the developer's math skills, when it comes to scratching and EQ effects. Sorry about that. ;)</p>
+
+   <p><b>Can I load MP3s from the internet?</b></p>
+
+   <p>Generally speaking, yes. Paste web URLs into the text box below each deck, and hit enter or click <b class="key">&rarr;</b> to load.</p>
+
+   <p>Note that if you are in scratch mode, the remote site must also have a special Flash crossdomain.xml file for playback to work.</p>
+
+   <p><b>Can I load arbitrary SoundCloud tracks?</b></p>
+
+   <p>If you know your party's extension (and by that I mean the "track ID"), you can load it using the same text box for internet URLs. The format is <b>sc-#</b> where # is the track ID. Only tracks that allow streaming will play.</p>
+
+   <p><b>Does this work on the iPhone, iPad, or another "special snowflake"-type device?</b></p>
+
+   <p>The UI renders OK, but you can't do much with it.</p>
+
+   <p>iOS doesn't do flash and doesn't (currently?) support remixing of audio via JavaScript, but HTML5 audio will be used if supported. iOS only allows playing of one sound at a time via JS, however, so you can't mix songs. That said, you can still pinch-zoom in, load and play a record on the left turntable.</p>
+
+   <p><b>Will this work without Flash?</b></p>
+
+   <p>If Flash isn't present, HTML5 audio will be attempted. This will also mean "scratch mode" (including pitch bending and EQ effects) will not be supported and you will be subject to HTML5 audio's quirks, not to mention bugs in my own code in this case.</p>
+
+   <p><b>Can I DJ a house party with this?</b></p>
+
+   <p>In theory, yes. It might be a bit sketchy, but fun for informal events.</p>
+
+   <p>If a friend or someone online writes in in saying it worked, I'd consider this fun experiment to be a success. I recommend Safari 5 and a MacBook Pro if you go for it. If you actually pull it off, POIDH! (Pictures Or It Didn't Happen.) Flickr tag: <code><a href="http://www.flickr.com/search/?q=wheelsofsteeldotnet&m=tags" title="Photos/videos tagged with 'wheelsofsteeldotnet' on Flickr"> wheelsofsteeldotnet</a></code>? ;)</p>
+
+   <p>On this note, split-channel mixing is on the to-do list. This way, you can cue music on your headphones (say, on the left channel) while your party is hearing the "live mix" only the right channel.</p>
+
+</div>
+
+<div class="third-column">
+
+   <h2><span title="Yes, intentional Canadian mis-spelling. :D" style="cursor:help">Aboot</span></h2>
+
+   <p>This is a side project by <a href="http://www.schillmania.com/" title="The creative and technical vents of Scott Schiller">Scott Schiller</a>, a Canadian who works at Yahoo! on Flickr and enjoys mixing photography, sound and code together to make shiny things. He occasionally shares things as <a href="http://twitter.com/schill/">@schill</a> on Twitter, and appreciates nice <a href="http://www.schillmania.com/content/react/contact/" title="Scott Schiller: Contact info">feedback</a>.</p>
+
+   <p>This project uses <a href="http://www.schillmania.com/projects/soundmanager2/" title="JavaScript Sound API for the web">SoundManager 2</a> and other F/OSS-type libraries. The source code is also available <a href="https://github.com/scottschiller/">on Github</a>.</p>
+
+   <h2>History + Tech Details</h2>
+
+   <p>This thing started in February 2011 as a small CSS experiment, and over 12 weeks between evenings and weekends, evolved to cover most of the capabilities of a dual-turntable and mixer console.</p>
+
+   <p><b>Is this "HTML5?"</b></p>
+
+   <p>There are few HTML5 elements in the markup - it's mostly CSS3 at work if anything; the mixer and turntable pitch sliders are 100% CSS, for example. The audio scratch, pitch and EQ effects are handled by Flash. HTML5 audio can be used if flash is not present, but functionality is reduced (i.e., no scratch mode.)</p>
+
+   <p><b>What was the point of all of this, again?</b></p>
+   <p>I've wanted to build some sort of browser-based turntable interface for years, but it wasn't really practical until CSS3 came along (making circles and rotation possible) and flash 10, which added support for dynamic audio manipulation. JavaScript APIs for low-level audio are also out there, so it may be possible do this entirely flash-free.</p>
+
+   <p><b>...<i>Why!?</i></b></p>
+
+   <p>I say, "Why not?" The fun of this (and most <a href="http://www.flickr.com/photos/schill/sets/72157616019003181/" title="Schillmania: DHTML Interface Design Archives (on Flickr)">previous JavaScript experiments</a>) was starting with a simple idea, while planning a grand scheme - and the challenge of actually determining if the latter was even possible. While there are some notable bugs and limitations, this idea has run a lot further than I ever expected and it was a ton of fun to build. If you try it out, I hope it works OK! :)</p>
+
+   <p><b>I'm not satisfied. I want to read, like, 8,000 more words about how this works. And I want pictures. And video.</b></p>
+   <p>If you're certain, see <a href="http://www.schillmania.com/content/entries/2011/wheels-of-steel/" title="The Wheels Of Steel: An Ode To Turntables (in HTML)">The Wheels Of Steel: An Ode To Turntables (in HTML)</a> for all of that.</p>
+
+   <h2>Credits and Thank-Yous</h2>
+
+   <p>In no particular order, thanks go out to the following:</p>
+
+   <ul>
+    <li>Graphic illustrator <a href="http://www.kylekesterson.com/" title="Kyle Kesterson, Seattle-based graphic designer">Kyle Kesterson</a> from <a href="http://giantthinkwell.com/" title="Giant Thinkwell, a TechStars &amp; Startup Weekend Company">Giant Thinkwell</a>, who provided awesome renderings of the turntable body.</li>
+    <li><a href="http://www.flickr.com/photos/zooboing/">Patrick Hoesly on Flickr</a>, who published the CC-licensed pattern used for the background: "<a href="http://www.flickr.com/photos/zooboing/4169915237/in/photostream/">334: Sunrise Alpha Texture</a>."</li>
+    <li>Vancouver-based hip-hop artist <a href="http://sonreal.bandcamp.com/">SonReal</a>, who granted permission to include some of his music in this demo.</li>
+    <li><a href="http://www.thru-you.com/">Kutiman</a> and numerous YouTube users for participating in the Thru-You project (which I was coincidentally sampled in), a wonderful mix of web-sourced music.</li>
+    <li><a href="http://www.kelvinluck.com/2009/03/second-steps-with-flash-10-audio-programming/">Kelvin Luck</a> and <a href="http://blog.andre-michelle.com/2009/pitch-mp3/" title="Andre Michelle: Pitch MP3 example">Andre Michelle</a>, for research and code examples regarding pitch bending in AS3/Flash 10.</li>
+    <li><a href="http://www.blixtsystems.com/2008/05/simple-3-band-eq-with-flash-player-10/">Leo Bergman</a> and <a href="http://ciboloweb.com/website-resources/website-design-articles/2009/08/flex-soundgraphic-equalizer-5-band/">Kevin Lamping</a> for their work on porting <a href="http://www.musicdsp.org/showArchiveComment.php?ArchiveID=236">EQ/filter code from C</a> into ActionScript 3.</li>
+    <li><a href="http://andrewfreiday.com/2010/04/29/generating-mp3-waveforms-with-php/">Andrew Freiday</a>, for publishing PHP scripts that can read and generate waveforms from MP3 files.</li>
+    <li><a href="http://www.profilepicture.co.uk/tutorials/caching-api-responses-php/">Phil Parsons</a> for the <a href="https://github.com/p-m-p/API-Cache/blob/master/">API-Cache</a> PHP class used here to optimize SoundCloud API calls.</li>
+    <li><a href="http://soundcloud.com">SoundCloud</a>, for their API which delivers fresh demo music (and the Beastie Boys' latest album) for users to play on these virtual turntables.</li>
+    <li>Friends, family and co-workers who patiently listened to my blabbering about this for several months, proof-read my writing and offered helpful feedback on earlier versions of the prototype.</li>
+    <li>Old-skool DJs who still keep it real and carry around tons of records, none of that laptop stuff! ;)</li>
+   </ul>
+
+   </div>
+
+   <div style="clear:both"></div>
+
+ </div>
+
+ <p id="experimental" style="clear:both;display:none;padding-top:1em"><span style="padding:3px 5px;background:rgba(255,48,48,0.25);color:#999;font-weight:bold">WARNING: Scratch mode is <em>highly experimental.</em> Sound may be terrible under high CPU load. No, really!</span></p>
+
+ </div>
+
+</div>
+
+<div id="default-content">
+
+  <div id="the-music">
+
+   <div class="first-column">
+
+    <h2>Sample music</h2>
+
+    <div id="tunes">
+
+     <p class="keys"><b style="opacity:0.75">Left-click</b> a track to load it on the left turntable. <b style="opacity:0.75">Right-click</b> or <b style="opacity:0.75">shift + click</b> for the right turntable. Click <b style="opacity:0.75">start/stop</b> to begin playing a record; you can then click and drag the needle to seek.</p>
+
+    <ul>
+
+      <li><a href="tunes/Ill.Gates_-_Scratchdisc.mp3" oncontextmenu="return false"><span class="artist">Ill.Gates - </span>Scratchdisc</a></li>
+
+      <li><a href="tunes/SonReal_-_Already_There_Remix_ft_Rich_Kidd_Saukrates.mp3" oncontextmenu="return false"><span class="artist">SonReal - </span>Already There Remix ft. Rich Kidd, Saukrates</a> (<i>explicit</i>)</li>
+
+      <li><a href="tunes/SonReal_-_Haunted_ft_Ali_Milner.mp3" oncontextmenu="return false"><span class="artist">SonReal - </span>Haunted ft. Ali Milner</a> (<i>explicit</i>)</li>
+
+      <li><a href="tunes/Hippo_-_The_Tempest.mp3" oncontextmenu="return false"><span class="artist">Hippo - </span>The Tempest</a></li>
+
+      <li><a href="tunes/Kraddy_-_Into_The_Labyrinth.mp3" oncontextmenu="return false"><span class="artist">Kraddy - </span>Into The Labyrinth</a></li>
+
+      <li><a href="tunes/PANTyRAiD_-_Testarossa.mp3" oncontextmenu="return false"><span class="artist">PANTyRAiD - </span>Testarossa</a></li>
+
+    </ul>
+
+    <p>Thanks to these artists for granting permission to use their music.</p>
+
+    <h2><a href="http://thru-you.com/" target="_blank" class="exclude">Thru-You</a>: Kutiman Mixes YouTube</h2>
+
+     <ul>
+
+      <li><a href="tunes/01_-_The_Mother_Of_All_Funk_Chords.mp3" oncontextmenu="return false">The Mother Of All Funk Chords</a></li>
+
+      <li><a href="tunes/02_-_This_Is_What_It_Became.mp3" oncontextmenu="return false">This Is What It Became</a></li>
+
+      <li><a href="tunes/03_-_I_Am_New.mp3" oncontextmenu="return false">I Am New</a></li>
+
+      <li><a href="tunes/04_-_Babylon_Band.mp3" oncontextmenu="return false">Babylon Band</a></li>
+
+      <li><a href="tunes/05_-_Someday.mp3" oncontextmenu="return false">Someday</a></li>
+
+      <li><a href="tunes/06_-_Wait_For_Me.mp3" oncontextmenu="return false">Wait For Me</a></li>
+
+      <li><a href="tunes/07_-_Just_A_Lady.mp3" oncontextmenu="return false">Just A Lady</a></li>
+
+    </ul>
+
+    <p>I unknowingly participated in the Thru-You project; a drum machine video I made was sampled for "Wait For Me."</p>
+
+    <h2>Bonus tracks</h2>
+
+     <ul>
+
+      <li><a href="tunes/armstrong.mp3" oncontextmenu="return false"><span class="artist">Schill - </span>Armstrong Beat</a></li>
+
+      <li><a href="tunes/untitled-groove.mp3" oncontextmenu="return false"><span class="artist">Schill - </span>Untitled Groove</a></li>
+
+      <li><a href="tunes/NYAN_CAT_-_UTAU_-_Nyanyanyanyanyanyanya.mp3" oncontextmenu="return false"><span class="artist">NYAN CAT - UTAU - </span>Nyanyanyanyanyanyanya</a> <br />(Note: .GIF madness <i>will cause CPU fires</i>, even on "<span style="cursor:help" title="A 'Moon Computer' is a term coined by TJ Schiller, who used it to refer to fancy/expensive machines with high-end specs.">moon computers</span>.")</li>
+
+     </ul>
+     
+    </div>
+
+   </div>
+
+   <div id="soundcloud-tracks" class="second-column">
+
+    <div id="soundcloud">
+     <h2>Hot tracks from <a href="http://soundcloud.com/tracks/" target="_blank" class="exclude">SoundCloud</a></h2>
+     <div id="soundcloud-top10"></div>
+    </div>
+
+    <p>(Note: Waveforms are currently excluded for SC tracks.)</p>
+
+   </div>
+
+   <div class="third-column">
+
+    <h2>Beastie Boys - <a href="http://soundcloud.com/beastieboys/sets/hot-sauce-committee-part-two/" target="_blank" class="exclude">Hot Sauce Committee Pt. 2</a> <span style="white-space:nowrap">(via SoundCloud)</span></h2>
+
+    <div id="soundcloud-beastieboys"></div>
+
+    <p>The Beasties are pretty web-friendly musicians for making their album available for streaming from SoundCloud. Thanks, dudes.</p>
+
+   </div>
+
+   <div style="clear:both"></div>
+
+  </div>
+
+ </div>
+
+</div>
+
+</div>
+
+<div id="the-end">
+
+ <p>This is a <a href="http://www.schillmania.com/projects/soundmanager2/" title="JavaScript Sound API for the Web">SoundManager 2</a> prototype by Scott Schiller (<a href="http://twitter.com/schill/">@schill</a>, or <a href="http://www.schillmania.com/content/react/contact/" title="Scott Schiller, say hello / contact info">say hello</a>.) Want more? Read about <a title="On the Tweeter" href="http://www.schillmania.com/content/entries/2011/wheels-of-steel/" title="The Wheels Of Steel: An Ode To Turntables (in HTML), schillmania.com">The Wheels Of Steel (in HTML)</a>.</p>
+
+</div>
+
+</div>
+
+<script type="text/javascript">
+if (document.domain.match(/wheelsofsteel\.net/i)) {
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-23791443-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script');
+    ga.type = 'text/javascript';
+    ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(ga, s);
+  })();
+}
+</script>
+
+<script type="text/javascript" src="http://include.reinvigorate.net/re_.js"></script>
+<script type="text/javascript">
+if (document.domain.match(/wheelsofsteel\.net/i)) {
+  try {
+    reinvigorate.track("860j9-p08a8ujx40");
+  } catch(err) {}
+}
+</script>
+
+</body>
+
+</html>

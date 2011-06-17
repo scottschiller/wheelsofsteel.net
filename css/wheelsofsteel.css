@@ -1,0 +1,2118 @@
+/*
+ * DJ Schill's adventures on the wheels of steel
+ * A browser-based turntable prototype / toy
+ * (Not for serious/skratch DJs given latency etc.)
+ * Code is provided "as-is", unsupported and without warranty.
+ * ------------------------------------------------------------
+ * http://wheelsofsteel.net/
+ * http://schillmania.com/content/entries/2011/wheels-of-steel/
+ *
+ * HTML + CSS + JS UI, uses SoundManager 2 API
+ * http://schillmania.com/projects/soundmanager2/
+ *
+ * Hardware acceleration needed for a usable UI.
+ * Scratch is laggy on Windows due to Flash/OS
+ * latency (and/or I'm doing it wrong.)
+*/
+
+body {
+ background: #111;
+ color: #666;
+ font-size: 11px;
+ font-family: helvetica,verdana,arial,"sans-serif";
+ margin: 0px;
+ padding: 0px;
+ min-width: 1228px; /* for iOS, primarily */
+}
+
+#tt-wrapper-wrapper {
+ /* two levels deep? dumb - but here we are.. */
+ position: relative;
+ /*
+  * CC-licensed pattern: 334: Sunrise Alpha Texture by Patrick Hoesly on Flickr
+  * http://www.flickr.com/photos/zooboing/4169915237/in/photostream/
+ */
+ background: #000 url(../image/patrick-hoesly-334-sunrise-alpha-texture-128-dark.png);
+}
+
+#tt-wrapper {
+ position:relative;
+ padding: 64px 0px 64px 0px;
+ background: -moz-linear-gradient(top, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 90%, rgba(16,16,16,0.25) 95%, rgba(16,16,16,1) 100%);
+ background: -ms-linear-gradient(top, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 90%, rgba(16,16,16,0.25) 95%, rgba(16,16,16,1) 100%); /* ie 10? */
+ background: -o-linear-gradient(top, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 90%, rgba(16,16,16,0.25) 95%, rgba(16,16,16,1) 100%); /* ie 10? */
+ background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,0)), color-stop(15%,rgba(255,255,255,0.3)), color-stop(55%,rgba(255,255,255,0)), color-stop(90%,rgba(16,16,16,0)), color-stop(95%,rgba(16,16,16,0.25)), color-stop(100%,rgba(16,16,16,1)));
+}
+
+#tt-container {
+ position: relative;
+ width: 1228px;
+ left: 50%;
+ margin-left: -614px;
+}
+
+#info {
+ position:relative;
+ padding: 0px 32px 0px 32px;
+ background-color: #111;
+/*
+ background: -moz-linear-gradient(top, #111111 0%, #2b2b2b 33%, #1c1c1c 66%, #131313 100%);
+ background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#111111), color-stop(33%,#2b2b2b), color-stop(66%,#1c1c1c), color-stop(100%,#131313)); /* webkit */
+*/
+ background-image: -webkit-gradient(
+    linear,
+    left top,
+    left bottom,
+    color-stop(0, rgba(8,8,8,0.1)),
+    color-stop(0.05, rgba(8,8,8,0.5)),
+    color-stop(1, rgba(8,16,32,1))
+ );
+ background-image: -moz-linear-gradient(
+    center top,
+    rgba(8,8,8,0.1) 0%,
+    rgba(8,8,8,0.5) 5%,
+    rgba(8,16,32,1) 100%
+ );
+ background-image: -o-linear-gradient(
+    center top,
+    rgba(8,8,8,0.1) 0%,
+    rgba(8,8,8,0.5) 5%,
+    rgba(8,16,32,1) 100%
+ );
+ background-image: -ms-linear-gradient(
+    center top,
+    rgba(8,8,8,0.1) 0%,
+    rgba(8,8,8,0.5) 5%,
+    rgba(8,16,32,1) 100%
+ );
+}
+
+a {
+ color: #336699;
+ text-decoration:none;
+ font-weight:bold;
+}
+
+body.hifi a {
+ color: rgba(255,255,255,0.75);
+}
+
+a:hover {
+ /* render changes here impact or interrupt HW-accel drawing in Safari 5, causing CPU spikes(?) and stuttering in Flash. (as of March 2011, anyway, when this was originally written.) */
+ /*
+ background:#336699;
+ color:#fff;
+ */
+}
+
+/* things which are draggable */
+
+.record,
+.tonearm img {
+ cursor: pointer;
+ cursor: -moz-grab;
+ cursor: -webkit-grab;
+}
+
+.turntable .is_dragging {
+ cursor: -moz-grabbing;
+ cursor: -webkit-grabbing;
+}
+
+.turntable {
+/*
+ * let's try to draw one, why not.
+ |-------------|
+ |   /-----\ | |
+ |  |      | | |
+ | *\_____/ /  |
+ | []__    #   |
+ |-------------|
+ * .. ehh, that didn't really work.
+*/
+ position: relative;
+ width: 575px;
+ margin-top: 1em;
+ border: 1px solid transparent;
+ background: transparent url(../image/table_shadow.png) no-repeat 0px 0px;
+}
+
+body.animating .turntable {
+ /* while animating only? */
+ -ms-transition: all 1.5s ease-in-out; /* anticipated in IE 10 */
+ -moz-transition: all 1.5s ease-in-out;
+ -webkit-transition: all 1.5s ease-in-out;
+}
+
+body.battle-style .turntable {
+ -webkit-transform: rotate(-90deg);
+ -moz-transform: rotate(-90deg);
+ -ms-transform: rotate(-90deg);
+ -o-transform: rotate(-90deg);
+ transform: rotate(-90deg);
+ width: 531px;
+}
+
+.turntable .body {
+ position: relative;
+ margin-top: 26px;
+ margin-left: 31px;
+ background: #30313b url(../image/table_body.png) no-repeat 0px 3px;
+ /* maybe, Technics color? */
+ /*
+ background-color: rgb(216, 215, 209);
+ */
+ width: 500px;
+ height: 375px;
+ overflow: hidden;
+ -moz-border-radius: 3px;
+ -webkit-border-radius: 3px;
+ border-radius: 3px;
+}
+
+.turntable .platter {
+ position: absolute;
+ top: 6px;
+ left: 25px;
+}
+
+.turntable .platter .ring {
+ width: 364px;
+ height: 364px;
+ background: transparent url(../image/table_platter.png) no-repeat 0px 0px;
+}
+
+.turntable .tonearm {
+ position: absolute;
+ left: 375px;
+ top: -7px;
+ width: 95px;
+ height: 180px;
+ z-index: 2; /* sit on top of lights, record etc. and grab mouse events */
+}
+
+.turntable .tonearm img {
+ position: absolute;
+ right: 0px;
+ top: 0px;
+ width: 102px;
+ height: 354px;
+}
+
+.turntable .platter .record,
+.turntable .platter .grooves,
+.turntable .platter .loader {
+ position: absolute;
+ left: 50%;
+ top: 50%;
+ width: 326px;
+ height: 326px;
+ margin-left: -163px;
+ margin-top: -163px;
+ -moz-border-radius: 163px;
+ -webkit-border-radius: 163px;
+ -o-border-radius: 163px;
+ border-radius: 163px;
+}
+
+.turntable .platter .grooves,
+.turntable .platter .loader {
+ margin-left: 0px;
+ margin-top: 0px;
+ overflow: hidden;
+}
+
+.turntable .platter .record .slipmat,
+.turntable .platter .record .record-ui,
+.turntable .platter .record .cover,
+.turntable .platter .record .shiny,
+.turntable .platter .record .label-notches,
+.turntable .platter .loader,
+.turntable .platter .cuepoint {
+ position: absolute;
+ left: 0px;
+ top: 0px;
+ width: 100%;
+ height: 100%;
+ background: transparent none no-repeat 50% 50%;
+ -webkit-border-radius: 326px;
+ -o-border-radius: 326px;
+ -moz-border-radius: 326px;
+ border-radius: 326px;
+}
+
+.turntable.has_record .platter .record .record-ui.empty .label-notches {
+ /* only show when there's no album art */
+ display: block;
+/*
+ background: transparent url(../image/widget_sprite_sources/record-label-notches.png) no-repeat 50% 50%;
+*/
+/*
+ background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUYAAAFGAQMAAAAsGaSzAAAABlBMVEX///8AAABVwtN+AAAAAXRSTlMAQObYZgAAAE9JREFUeF7t0LERgCAUREGIMMISbMXSLM1SKMUETS8gc3ajF9wM8ym/AQAAAAAAwPbVGZb9jXqH5X7NaHE5Zhxry/x6vmj9lwAAAAAAAOAB3IkId57JajkAAAAASUVORK5CYII=) no-repeat 50% 50%;
+*/
+ z-index: 2; /* and sit on top of the label, too. */
+}
+
+.turntable .platter .record .record-ui.empty .grooves {
+ background: transparent url(../image/record-grooves-4x4-empty.jpg) no-repeat 50% 50%; /* black mask - no bg image, rgba() will be applied */
+ opacity: 1;
+}
+
+.turntable .platter .record .record-ui {
+ /*
+  * record album art, if any, is applied here as a background image.
+  * it should be scaled to the correct size.
+ */
+ -webkit-background-size: 326px 326px;
+ -moz-background-size: 326px 326px;
+ background-size: 326px 326px;
+}
+
+.turntable .platter .record .slipmat {
+ background: transparent url(../image/slipmats/techniques.jpg) no-repeat 50% 50%;
+}
+
+.turntable.tripmat .record .slipmat {
+ /* 
+  * tripmat (2x2 soild line/moire pattern.) Like, woah, man.
+ */
+ background: #fff url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAF0lEQVR42k3BsQEAAACCIP9/2hwDIscBDwMB/5hvOLQAAAAASUVORK5CYII=);
+ /*
+ * 4x4 variant
+ */
+ /*
+ background: #fff url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAGUlEQVR42pXIoQEAAACCMP5/Wsk2F4fCOLOBwgP92q0bBQAAAABJRU5ErkJggg==);
+ */
+}
+
+.turntable .platter .record .cover {
+ background: transparent;
+ width: 326px;
+ height: 326px;
+ z-index:2; /* sit on top of lights, etc. and grab mouse events */
+}
+
+.turntable .platter .record .shiny {
+ background: transparent url(../image/record-highlights-45.png) no-repeat 50% 50%;
+ opacity: 0.18;
+ display: none; /* hide until a record is "loaded" */
+}
+
+.turntable .platter .grooves,
+.turntable .platter .loader {
+ position: absolute;
+ left: 0px;
+ top: 0px;
+ width: 100%;
+ height: 100%;
+ background: transparent url(../image/record-grooves-4x4.png) no-repeat 50% 50%; /* black mask - no bg image, rgba() will be applied */
+ opacity: 0.04;
+ display: none;
+}
+
+.turntable .platter .loader {
+ /* element used to show load progress */
+ /* also inherits border-radius, etc. */
+ left: 50%;
+ top: 50%;
+ margin-left: -50%;
+ margin-top: -50%;
+ background: rgba(0,0,0,0.75) url(../image/record-grooves-4x4-dark.png) no-repeat 50% 50%; /* black mask - no bg image, rgba() will be applied */
+ opacity: 0.25;
+}
+
+.turntable .record .label {
+ position: absolute;
+ left: 50%;
+ top: 50%;
+ width: 90px;
+ height: 90px;
+ margin-top: -46px;
+ margin-left: -46px;
+ background: rgba(255,255,255,0.85);
+ border: 1px solid rgba(0,0,0,0.03);
+ -moz-border-radius: 45px;
+ -webkit-border-radius: 45px;
+ -o-border-radius: 45px;
+ border-radius: 45px;
+ /* in the event a background image is used... */
+ /*
+ background: transparent url(../image/record-label-generic.jpg) 50% 50% no-repeat;
+ -webkit-background-size: 91px 91px;
+ -moz-background-size: 91px 91px;
+ -ms-background-size: 91px 91px;
+ background-size: 91px 91px;
+ */
+ display: none;
+}
+
+.turntable.has_record .platter .record .shiny,
+.turntable.has_record .platter .grooves,
+.turntable.has_record .platter .loader,
+.turntable.has_record .platter .label {
+ /* when a record is actually on the turntable... */
+ display: block;
+}
+
+.turntable.has_record .platter .record .slipmat {
+ /* when a record is present, it's on top of the slipmat. */
+ display: none;
+}
+
+.turntable .record .spindle {
+ position: absolute;
+ left: 50%;
+ top: 50%;
+ width: 3px;
+ height: 3px;
+ margin-left: -3px;
+ margin-top: -3px; /* shadow will counter for this */
+ background-color: #777;
+ /*
+ background-image: -moz-radial-gradient(center 45deg, circle closest-side, #999 0%, #666 100%);
+ background-image: -webkit-radial-gradient(30% 30%, circle closest-side, #999 #666);
+ background-image: -webkit-gradient(radial, 20% 20%, 0, 20% 20%, 8, from(#999), to(#666));
+ */
+ border: 1px solid rgba(0,0,0,0.15);
+ -moz-box-shadow: 1px 1px 1px rgba(0,0,0,0.075);
+ -webkit-box-shadow: 1px 1px 1px rgba(0,0,0,0.075);
+ box-shadow: 1px 1px 1px rgba(0,0,0,0.075);
+ -moz-border-radius: 5px;
+ -webkit-border-radius: 5px;
+ -o-border-radius: 5px;
+ border-radius: 5px;
+}
+
+.turntable .record .cuepoint {
+ /* container for "tape" elements */
+ /*
+ overflow: hidden;
+ */
+}
+
+.turntable .record .cuepoint .tape {
+ position: absolute;
+ left: 50%;
+ top: 50%;
+ margin: 0px; /* reset */
+ /* width: how far out (set via JS)... */
+ border-right: 8px solid rgba(255,255,255,0.65); /* how wide.. */
+ height: 16px; /* and how tall. */ 
+}
+
+/* an idea set aside (it looks weird): colored tape (cue points) */
+
+/*
+
+.turntable .record .cuepoint .tape .highlight {
+ position: absolute;
+ left: -3px;
+ top: 0px;
+ width: 100%;
+ height: 16px;
+ border-right: 2px solid #fff;
+ opacity: 0.75;
+}
+
+.turntable .record .cuepoint.type-0 .tape .highlight {
+ border-color: red;
+}
+
+.turntable .record .cuepoint.type-1 .tape .highlight {
+ border-color: orange;
+}
+
+.turntable .record .cuepoint.type-2 .tape .highlight {
+ border-color: yellow;
+}
+
+.turntable .record .cuepoint.type-3 .tape .highlight {
+ border-color: blue;
+}
+
+.turntable .record .cuepoint.type-4 .tape .highlight {
+ border-color: green;
+}
+
+*/
+
+.turntable .startstop {
+ position: absolute;
+ bottom: 13px;
+ left: 13px;
+ width: 46px;
+ height: 36px;
+ text-indent: -9999em;
+ overflow: hidden;
+/*
+ background: transparent url(../image/widget_sprite_sources/table_startstop.png) no-repeat 50% 50%;
+*/
+ outline: none;
+ font-weight: normal;
+ z-index: 2; /* sit on top of cover, which overlaps slightly */
+}
+
+.turntable .startstop:active {
+ background-color: #000;
+ opacity: 0.8;
+ bottom: 12px;
+}
+
+.turntable .powerdial {
+ position: absolute;
+ bottom: 66px;
+ left: 14px;
+ width: 30px;
+ height: 30px;
+ text-indent: -9999em;
+ overflow: hidden;
+/*
+ background: transparent url(../image/widget_sprite_sources/table_powerdial.png) no-repeat 50% 50%;
+*/
+ -moz-transition: -moz-transform 0.3s ease-out;
+ -ms-transition: -ms-transform 0.3s ease-out;
+ -webkit-transition: -webkit-transform 0.3s ease-out;
+}
+
+.turntable.power-on .powerdial {
+ -moz-transform: rotate(45deg);
+ -webkit-transform: rotate(45deg);
+ -ms-transform: rotate(45deg);
+ -o-transform: rotate(45deg);
+ transform: rotate(45deg);
+}
+
+.turntable .powerdial-led {
+ position: absolute;
+ bottom: 71px;
+ left: 30px;
+ width: 80px;
+ height: 82px;
+ overflow: hidden;
+ text-indent: -9999em;
+/*
+ background: transparent url(../image/widget_sprite_sources/table_powerdial_led.png) no-repeat 0px 0px;
+*/
+ opacity: 0; /* set later via JS */
+}
+
+.turntable .powerlight,
+.turntable .powerlight-on {
+ position: absolute;
+ bottom: 18px;
+ left: 250px;
+ width: 80px;
+ height: 82px;
+/*
+ background: transparent url(../image/widget_sprite_sources/table_powerlight_off.png) no-repeat 0px 0px;
+*/
+}
+
+.turntable .powerlight-on {
+ left: 0px;
+ top: 0px;
+/*
+ background: transparent url(../image/widget_sprite_sources/table_powerlight_on.png) no-repeat 0px 0px;
+*/
+ -moz-transition: opacity 0.2s ease-out;
+ -ms-transition: opacity 0.2s ease-out;
+ -webkit-transition: opacity 0.2s ease-out;
+ opacity: 0;
+}
+
+.turntable.power-on .powerlight-on {
+ opacity: 1;
+}
+
+.turntable .rpm-33,
+.turntable .rpm-45 {
+ position: absolute;
+ bottom: 13px;
+ width: 25px;
+ height: 8px;
+}
+
+.turntable .rpm-33 {
+ left: 66px;
+/*
+ background: transparent url(../image/widget_sprite_sources/table_button_33.png) no-repeat 0px 0px;
+*/
+}
+
+.turntable .rpm-45 {
+ left: 95px;
+/*
+ background: transparent url(../image/widget_sprite_sources/table_button_45.png) no-repeat 0px 0px;
+*/
+}
+
+.turntable .rpm-33 span,
+.turntable .rpm-45 span {
+ position: absolute;
+ left: 20px;
+ top: 3px;
+ display: block;
+ width: 4px;
+ height: 1px;
+ overflow: hidden;
+ text-indent: -9999em;
+/*
+ background: transparent url(../image/widget_sprite_sources/table_speed_on.png) no-repeat 0px 0px;
+*/
+ opacity: 0;
+ -moz-transition: opacity 0.2s ease-out;
+ -ms-transition: opacity 0.2s ease-out;
+ -webkit-transition: opacity 0.2s ease-out;
+}
+
+.turntable .rpm-33:active,
+.turntable .rpm-45:active {
+ background-color: #000;
+ opacity: 0.8;
+ bottom: 12px;
+}
+
+.turntable.power-on.rpm-33 .rpm-33 span,
+.turntable.power-on.rpm-45 .rpm-45 span {
+ opacity: 1;
+}
+
+.turntable .pitch-box-hider {
+ position: absolute;
+ width: 1px;
+ height: 1px;
+ overflow: hidden;
+}
+
+.turntable .control-pitch-slider {
+ width: 500px;
+ margin-left: 31px;
+ position: absolute;
+ margin: -99em 0px 0px -99em;
+}
+
+.control-pitch-slider-text {
+ position: absolute;
+ bottom: 0px;
+ right: 0px;
+ margin-bottom: -1.6em;
+ color: rgba(255,255,255,0.25);
+ white-space: nowrap;
+ text-align: center;
+}
+
+.turntable .pitch-box {
+ position: absolute;
+ right: 24px;
+ top: 170px;
+ width: 48px;
+ height: 160px;
+}
+
+.turntable .pitch { /* nested inside .pitch-box, actually */
+ position: absolute;
+ top: 0px;
+ right: 0px;
+ width: 24px;
+ height: 165px;
+ background: rgba(255,255,255,0.05); /* lighter */
+ background: rgba(248,252,255,0.6); /* chrome-ish color? */
+ background: rgba(0,0,0,0.25); /* darker */
+ border: 1px solid rgba(0,0,0,0.05);
+}
+
+.turntable .pitch .label {
+ position: absolute;
+ left: 0px;
+ top: 0px;
+ color: rgba(255,255,255,0.2);
+ font-size: 9px;
+ white-space: nowrap;
+ margin-top: -1.75em;
+ margin-left: -15px;
+}
+
+.turntable .pitch .legend {
+ position: absolute;
+ left: 0px;
+ top: 0px;
+ width: 18px;
+ height: 160px;
+ padding-top: 5px;
+ margin-left: -20px;
+ margin-top: -1px; /* ? */
+ background: rgba(255,255,255,0.03); /* lighter */
+ background: rgba(248,252,255,0.5); /* chrome-ish? */
+ background: rgba(0,0,0,0.15); /* darker */
+ border: 1px solid rgba(0,0,0,0.05);
+ border-right: none;
+}
+
+.turntable .pitch,
+.turntable .pitch .legend {
+ -moz-border-radius: 1px;
+ -webkit-border-radius: 1px;
+ border-radius: 1px;
+}
+
+.turntable .pitch .legend ul {
+ list-style-type: none;
+}
+
+.turntable .pitch .legend ul,
+.turntable .pitch .legend ul li {
+ margin: 0px;
+ padding: 0px;
+}
+
+.turntable .pitch .legend ul li {
+ font-size: 10px;
+ line-height: 9px;
+ text-align: right;
+ color: rgba(255,255,255,0.3);
+}
+
+.turntable .pitch .legend ul li span {
+ /* little boxes */
+ padding-left: 1px;
+ font-size: 8px;
+ vertical-align: top;
+ line-height: 9px;
+}
+
+.turntable .pitch .legend ul li span {
+ /* boxen */
+ opacity: 0.45;
+ margin-right: -1px; /* due to rendering, pull right one. */
+}
+.turntable .pitch .legend ul li:nth-child(even) {
+ /* marker lines */
+ opacity: 0.75;
+}
+
+.turntable .pitch .pitch-slider {
+ position: absolute;
+ left: 50%;
+ top: 50%;
+ width: 20px;
+ height: 14px;
+ margin-top: -9px; /* computed height ends up as 18px */
+ margin-left: -11px;
+ background: rgba(255,255,255,0.75);
+ border: 1px solid rgba(0,0,0,0.2);
+ border-top: 1px solid rgba(255,255,255,0.75);
+ border-bottom: 1px solid rgba(255,255,255,0.75);
+ border-left: 1px solid rgba(255,255,255,0.4);
+ border-right: 1px solid rgba(255,255,255,0.5);
+ padding: 1px 0px;
+ -webkit-background-clip: padding-box;
+ -webkit-border-radius: 2px;
+ border-radius: 2px;
+ background-clip: padding-box; /* restrict bg color to inside border */
+ cursor: pointer;
+ cursor: -moz-grab;
+ cursor: -webkit-grab;
+ z-index: 2;
+}
+
+.turntable .pitch .pitch-slider:hover {
+ background: #99ccff;
+ -webkit-background-clip: padding-box; /* needs reapplying here, didn't expect this. */
+ background-clip: padding-box;
+}
+
+.turntable .pitch .pitch-slider.resetting {
+ /* only targeting "top" position, positionTop maybe? */
+ -moz-transition: all 0.15s ease-out;
+ -ms-transition: all 0.15s ease-out;
+ -webkit-transition: all 0.15s ease-out;
+}
+
+.turntable .pitch .pitch-slider.dragging {
+ cursor: pointer;
+ cursor: -moz-grabbing;
+ cursor: -webkit-grabbing;
+}
+
+.turntable .pitch .pitch-slider .pitch-line {
+ position: absolute;
+ top: 50%;
+ left: 0px;
+ width: 100%;
+ height: 2px;
+ background-color: rgba(0,0,0,0.5);
+ margin-top: -1px;
+ -moz-transition: background 0.15s ease-out;
+ -ms-transition: background 0.15s ease-out;
+ -webkit-transition: background 0.15s ease-out;
+}
+
+.turntable .pitch .pitch-slider:hover .pitch-line,
+.turntable .pitch .pitch-slider.dragging .pitch-line {
+ background-color: #3399cc;
+}
+
+.turntable .pitch .pitch-slider .shade-top,
+.turntable .pitch .pitch-slider .shade-bottom {
+ position: absolute;
+ left: 0px;
+ width: 100%;
+ height: 7px;
+ background: rgba(0,0,0,0.25);
+ background: -moz-linear-gradient(top, #bbb 0%, #888 30%, #d6d6d6 50%, #d1d1d1 51%, #f0f0f0 100%); /* firefox */
+ background: -ms-linear-gradient(top, #bbb 0%, #888 30%, #d6d6d6 50%, #d1d1d1 51%, #f0f0f0 100%); /* ie 10? */
+ background: -o-linear-gradient(top, #bbb 0%, #888 30%, #d6d6d6 50%, #d1d1d1 51%, #f0f0f0 100%);
+ background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#bbb), color-stop(30%,#888), color-stop(50%,#d6d6d6), color-stop(51%,#d1d1d1), color-stop(100%,#f0f0f0)); /* webkit */
+}
+
+.turntable .pitch .pitch-slider .shade-top {
+ top: 0px;
+}
+
+.turntable .pitch .pitch-slider .shade-bottom {
+ top: 9px;
+ -moz-transform: rotate(180deg);
+ -webkit-transform: rotate(180deg);
+ -ms-transform: rotate(180deg);
+ -o-transform: rotate(180deg);
+ transform: rotate(180deg);
+}
+
+.turntable .pitch .rail {
+ position: absolute;
+ left: 50%;
+ top: 5px;
+ margin-left: -1px;
+ width: 2px;
+ height: 150px;
+ background: rgba(0,0,0,0.15);
+}
+
+.turntable.debug .tonearm,
+.turntable.debug .tonearm img,
+.turntable.debug .record-ui,
+.turntable.debug .ring,
+.turntable.debug .platter-wrapper,
+.turntable.debug .powerdial,
+.turntable.debug .record,
+.turntable.debug .cover,
+.turntable.debug .grooves,
+.turntable.debug .record .cuepoint .tape {
+ outline: 1px dashed rgba(255,128,128,0.75) !important;
+ background-color: rgba(255,255,255,0.25) !important;
+}
+
+.turntable.debug .record .cuepoint .tape {
+ background-color: rgba(0,0,0,0.25) !important;
+}
+
+.turntable.debug .grooves {
+ opacity: 0.5;
+}
+
+.turntable.debug .body {
+ overflow: visible;
+}
+
+.turntable.debug .tonearm:hover,
+.turntable.debug .tonearm img:hover,
+.turntable.debug .record-ui:hover,
+.turntable.debug .ring:hover,
+.turntable.debug .platter-wrapper:hover,
+.turntable.debug .record:hover,
+.turntable.debug .powerdial:hover,
+.turntable.debug .powerdial-led:hover,
+.turntable.debug .powerlight-on:hover {
+ background-color: rgba(255,128,128,0.33) !important;
+}
+
+.turntable.debug .turntable .is_dragging,
+.turntable.debug .turntable .is_dragging .platter-wrapper {
+ outline: 1px dashed rgba(128,255,128,0.75);
+}
+
+.turntable .waveform {
+ position: relative;
+ width: 498px;
+ height: 48px;
+ background: -moz-linear-gradient(top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.1) 100%); /* firefox */
+ background: -ms-linear-gradient(top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.1) 100%); /* ie 10 */
+ background: -o-linear-gradient(top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.1) 100%);
+ background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0.5)), color-stop(75%,rgba(0,0,0,0.5)), color-stop(100%,rgba(0,0,0,0.1))); /* webkit */
+ -moz-border-radius: 3px;
+ -webkit-border-radius: 3px;
+ border-radius: 3px;
+ padding-top: 1px;
+ margin-left: 31px;
+ opacity: 1;
+}
+
+body.battle-style #tt-container #tt-2 .waveform {
+ position: absolute;
+ left: 0px;
+ top: 0px;
+ margin-top: -22px;
+ /* flip the gradient around */
+ background: -moz-linear-gradient(bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.1) 100%); /* firefox */
+ background: -ms-linear-gradient(bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.1) 100%); /* ie 10 */
+ background: -o-linear-gradient(bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.1) 100%);
+ background: -webkit-gradient(linear, left bottom, left top, color-stop(0%,rgba(0,0,0,0.5)), color-stop(75%,rgba(0,0,0,0.5)), color-stop(100%,rgba(0,0,0,0.1))); /* webkit */
+}
+
+.turntable .waveform .playhead,
+.turntable .waveform .marker,
+.turntable .waveform .waveform-1,
+.turntable .waveform .waveform-2 {
+ -moz-transition: opacity 0.25s ease-out;
+ -ms-transition: opacity 0.25s ease-out;
+ -webkit-transition: opacity 0.25s ease-out;
+}
+
+.turntable .waveform .waveform-1,
+.turntable .waveform .waveform-2 {
+ position: absolute;
+ left: 0px;
+ top: 0px;
+ margin-left: 0px;
+ width: 100%;
+ height: 100%;
+}
+
+.turntable .waveform .waveform-2 {
+ /* hide by default */
+ opacity: 0;
+}
+
+.turntable .waveform:hover .waveform-1 {
+ opacity: 0.1;
+}
+
+.turntable .waveform:hover .waveform-2 {
+ opacity: 1;
+}
+
+.turntable .waveform .loader {
+ position: absolute;
+ display: none;
+ left: 250px;
+ top: 50%;
+ margin: -18px 0px 0px -18px;
+ width: 32px;
+ height: 32px;
+}
+
+.turntable .waveform.loading .loader {
+ display: block;
+ background: transparent url(../image/icon_loading_spinner_6699cc.gif) no-repeat 0px 0px;
+}
+
+.turntable .waveform .playhead,
+.turntable .waveform .playhead-arrow {
+ left: 249px;
+ visibility: hidden;
+}
+
+.turntable .waveform .playhead {
+ position: absolute;
+ top: 50%;
+ height: 24px;
+ margin-left: -1px;
+ margin-top: -12px;
+ width: 2px;
+ background: rgba(255,255,255,0.25);
+ z-index: 2;
+}
+
+.turntable .waveform .playhead-arrow.compact {
+ left: 0px;
+}
+
+.turntable .waveform.loading .playhead {
+ display: none;
+}
+
+.turntable .waveform .playhead-arrow {
+ position: absolute;
+ bottom: 0px;
+ margin-left: -4px;
+ border-color: transparent transparent rgba(255,255,255,0.33);
+ border-style: solid;
+ border-width: 0 4px 4px;
+ height: 0;
+ width: 0;
+}
+
+.turntable .waveform .loaded .playhead,
+.turntable .waveform .loaded .playhead-arrow {
+ visibility: visible;
+}
+
+body.battle-style #tt-container #tt-2 .waveform .playhead-arrow {
+ -webkit-transform: rotate(-180deg);
+ -moz-transform: rotate(-180deg);
+ -ms-transform: rotate(-180deg);
+ -o-transform: rotate(180deg);
+ transform: rotate(-180deg);
+ top: 0px;
+}
+
+.turntable .waveform .waveform-2 .marker {
+ position: absolute;
+ bottom: 0px;
+ margin-left: -4px;
+ border-color: transparent transparent rgba(160,192,255,0.5);
+ border-style: solid;
+ border-width: 0 4px 4px;
+ height: 0;
+ width: 0;
+}
+
+.turntable .waveform .waveform-2 .marker .label {
+ position: absolute;
+ bottom: 0px;
+ left: 0px;
+ width: 8px;
+ line-height: 1.1em;
+ text-align: center;
+ margin-bottom: -1.65em;
+ margin-left: -4px;
+ background-color: rgba(0,0,0,0.25);
+ color: rgba(255,255,255,0.5);
+}
+
+/* sprite-ification */
+
+.turntable .rpm-33,
+.turntable .rpm-45,
+.turntable .rpm-33 span,
+.turntable .rpm-45 span,
+.turntable .powerdial,
+.turntable .powerdial-led,
+.turntable .powerlight,
+.turntable .powerlight-on,
+.turntable .startstop {
+ background-image: url(../image/table_widget_sprite.png);
+ background-repeat: no-repeat;
+}
+
+.turntable .rpm-33 {
+ background-position: 0px 0px;
+ width: 25px;
+ height: 7px;
+} 
+
+.turntable .rpm-45 {
+ background-position: -29px 0px;
+ width: 25px;
+ height: 7px;
+}
+
+.turntable .powerdial {
+ background-position: -58px 0px;
+ width: 30px;
+ height: 30px;
+}
+
+.turntable .powerdial-led {
+ background-position: -92px 0px;
+ width: 81px;
+ height: 83px;
+}
+ 
+.turntable .powerlight {
+ background-position: -177px 0px;
+ width: 80px;
+ height: 82px;
+}
+ 
+.turntable .powerlight-on {
+ background-position: -261px 0px;
+ width: 80px;
+ height: 82px;
+}
+ 
+.turntable .rpm-33 span,
+.turntable .rpm-45 span {
+ background-position: -345px 0px;
+ width: 4px;
+ height: 1px;
+}
+
+.turntable .startstop {
+ background-position: -353px 0px;
+ width: 46px;
+ height: 36px;
+}
+
+/* larger elements holding the decks, etc. */
+
+#tt-container {
+ padding-bottom: 1.5em; /* space for marker text */
+}
+
+#tt-container.scratch-mode {
+ padding-bottom: 0px; /* doesn't apply here */
+}
+
+#tt-1,
+#tt-2 {
+ display:inline-block;
+}
+
+#tt-1 {
+ margin-right:0.5em;
+}
+
+body.battle-style #tt-container #tt-1 {
+ margin-left: 96px;
+}
+
+#tt-container #tt-2 {
+ /* room for mixer */
+ margin-left: 63px;
+}
+
+body.battle-style #tt-container #tt-2 {
+ /* except in battle style mode */
+ margin-left: -17px;
+ padding-bottom: 48px; /* offset for waveform being absolute */
+}
+
+#mixer {
+/*         :D
+ |------------|
+ |   o    o   |
+ |   o    o   |
+ |   o    o   |
+ |   +    +   |
+ |   |    |   |
+ |   --|--    |
+ |------------|
+*/
+ position: absolute;
+ left: 532px;
+ bottom: 69px;
+ background: #363741;
+ padding: 4px 4px 2px 4px;
+ width: 141px; /* +1px for fx4? */
+ z-index: 2; /* sit atop decks */
+ -moz-border-radius: 1px;
+ -webkit-border-radius: 1px;
+ border-radius: 1px;
+}
+
+#tt-container.scratch-mode #mixer {
+ top: auto;
+ bottom: 53px;
+}
+
+body.battle-style #tt-container #mixer {
+ bottom: 0px; /* non-scratch-mode */
+ margin-bottom: -6px;
+ left: 538px;
+ border: 1px solid rgba(0,0,0,0.25);
+ -webkit-border-radius: 2px;
+ -moz-border-radius: 2px;
+ border-radius: 2px;
+}
+
+body.battle-style #tt-container.scratch-mode #mixer {
+ margin-top: 57px;
+}
+
+#mixer .mixer-panel {
+ position: relative;
+ width: 68px;
+ display: inline-block;
+ margin-right: 1px;
+ vertical-align: top;
+ margin-bottom: 1px;
+}
+
+#mixer .mixer-panel .bd {
+ /* slight bg + border on body */
+ margin: 0px auto 0.35em auto;
+ background: rgba(255,255,255,0.02);
+ -moz-border-radius: 2px;
+ -webkit-border-radius: 2px;
+ border-radius: 2px;
+}
+
+#mixer .mixer-panel.full-panel {
+ width: 100%;
+ margin-right: 0px;
+ padding-top: 0px; /* less padding */
+ margin-bottom: 0px;
+}
+
+#mixer .mixer-panel.right-panel {
+ margin-right: 0px;
+}
+
+#mixer .pots {
+ /* "potentiometers", that is. */
+ list-style-type: none;
+}
+
+#mixer .pots,
+#mixer .pots li {
+ position: relative;
+ margin: 0px;
+ padding: 0px;
+}
+
+#mixer .pots li,
+#mixer .pots li .pot {
+ /* individual pot.. */
+ min-height: 20px;
+ overflow: hidden;
+}
+
+#mixer .pots li {
+ display: block;
+ padding: 2px 2px 8px 2px;
+}
+
+#mixer .pots li input {
+ /* hide the related input. */
+ margin-left: -9999em;
+}
+
+#mixer .pots li .pot {
+ position: absolute;
+ left: 50%;
+ top: 4px;
+ width: 20px;
+ height: 20px;
+ margin-left: -10px;
+ background: #222 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NAREAAAQEMGm/fwPUcLYCq7qgV5IWCoVC4aEQgGcG1m1QSpkIHTsAAAAASUVORK5CYII=) no-repeat 50% 50%;
+ border: 1px solid #111;
+ -moz-border-radius: 15px;
+ -webkit-border-radius: 15px;
+ border-radius: 15px;
+ cursor: pointer;
+ cursor: -moz-grab;
+ cursor: -webkit-grab;
+ /* possibly dumb to transition "all" for animation/dragging, but whatever. */
+ -moz-transition: all 0.15s ease-out;
+ -ms-transition: all 0.15s ease-out;
+ -webkit-transition: all 0.15s ease-out;
+}
+
+#mixer .pots li .pot.dragging,
+#mixer .pots li .pot:hover {
+ border-color: #336699;
+ background-color: #002244;
+}
+
+#mixer .pots li .pot.dragging {
+ border-color: #6699cc;
+ cursor: -moz-grabbing;
+ cursor: -webkit-grabbing;
+}
+
+#mixer .x-fader-panel {
+ text-align: center;
+ padding-top: 0.5em;
+}
+
+#mixer .x-fader-panel .x-fader {
+ width: 80px;
+}
+
+#mixer .upfader {
+ position: relative;
+ width: 32px;
+ height: 64px;
+ margin: 0px auto;
+}
+
+#mixer .crossfader {
+ position: relative;
+ width: auto;
+ height: 24px;
+ margin: 0px auto;
+}
+
+#mixer .crossfader-ui {
+ position: absolute;
+ left: 36px; /* left-align with upfader */
+ top: 4px;
+ width: 72px;
+ height: 20px;
+}
+
+#mixer .upfader input,
+#mixer .crossfader input {
+ position: absolute;
+ top: 22px;
+ left: -99em;
+ width: 56px;
+}
+
+#mixer .upfader input {
+ -moz-transform: rotate(-90deg);
+ -webkit-transform: rotate(-90deg);
+ -ms-transform: rotate(-90deg);
+ -o-transform: rotate(-90deg);
+ transform: rotate(-90deg);
+}
+
+#mixer.debug .upfader-slider,
+#mixer.debug .crossfader-slider {
+ opacity: 0.5;
+}
+
+#mixer.debug .crossfader input {
+ top: 3px;
+ left: 32px;
+ width: 72px;
+}
+
+#mixer.debug .upfader input {
+ left: -12px;
+}
+
+#mixer .upfader-slider,
+#mixer .crossfader-slider {
+ position: absolute;
+ left: 50%;
+ top: 25%;
+ width: 21px;
+ height: 8px;
+ margin-top: -5px; /* computed height ends up as 10px */
+ margin-left: -11px;
+ background: #ddd;
+ border: 1px solid rgba(0,0,0,0.2);
+ border-top: 1px solid rgba(255,255,255,0.75);
+ border-bottom: 1px solid rgba(255,255,255,0.75);
+ border-left: 1px solid rgba(255,255,255,0.4);
+ border-right: 1px solid rgba(255,255,255,0.5);
+ padding: 1px 0px;
+ -webkit-background-clip: padding-box;
+ -webkit-border-radius: 2px;
+ -moz-border-radius: 2px;
+ border-radius: 2px;
+ background-clip: padding-box; /* restrict bg color to inside border */
+ cursor: pointer;
+ cursor: -moz-grab;
+ cursor: -webkit-grab;
+ z-index: 2;
+}
+
+#mixer .crossfader-slider {
+ width: 20px;
+ margin-top: -4px;
+ margin-left: -13px;
+ -moz-transform: rotate(-90deg);
+ -webkit-transform: rotate(-90deg);
+ -ms-transform: rotate(-90deg);
+ -o-transform: rotate(-90deg);
+ transform: rotate(-90deg);
+}
+
+#mixer .upfader-slider:hover .line,
+#mixer .upfader-slider.dragging .line,
+#mixer .crossfader-slider:hover .line,
+#mixer .crossfader-slider.dragging .line  {
+ border-top-color: #3399cc;
+ border-bottom-color: #3399ff;
+ -webkit-background-clip: padding-box; /* needs reapplying here, didn't expect this. */
+ background-clip: padding-box;
+}
+
+#mixer .upfader-slider.resetting,
+#mixer .crossfader-slider.resetting {
+ /* only targeting "top" position, positionTop maybe? */
+ -moz-transition: all 0.15s ease-out;
+ -ms-transition: all 0.15s ease-out;
+ -webkit-transition: all 0.15s ease-out;
+}
+
+#mixer .upfader-slider.dragging,
+#mixer .crossfader-slider.dragging {
+ cursor: pointer;
+ cursor: -moz-grabbing;
+ cursor: -webkit-grabbing;
+}
+
+#mixer .upfader-ui input,
+#mixer .crossfader-ui input {
+ left: -999em;
+}
+
+#mixer .upfader-ui .line,
+#mixer .crossfader-ui .line {
+ position: absolute;
+ top: 50%;
+ left: 0px;
+ width: 100%;
+ border-top: 1px solid rgba(0,0,0,0.33);
+ border-bottom: 1px solid rgba(0,0,0,0.15);
+ margin-top: -1px;
+ -moz-transition: border 0.15s ease-out;
+ -ms-transition: border 0.15s ease-out;
+ -webkit-transition: border 0.15s ease-out;
+}
+
+#mixer .upfader-slider .shade-top,
+#mixer .upfader-slider .shade-bottom,
+#mixer .crossfader-slider .shade-top,
+#mixer .crossfader-slider .shade-bottom {
+ position: absolute;
+ left: 0px;
+ width: 100%;
+ height: 7px;
+ background: rgba(0,0,0,0.25);
+ background: -moz-linear-gradient(top, #bbb 0%, #888 30%, #d6d6d6 50%, #d1d1d1 51%, #f0f0f0 100%); /* firefox */
+ background: -ms-linear-gradient(top, #bbb 0%, #888 30%, #d6d6d6 50%, #d1d1d1 51%, #f0f0f0 100%); /* ie 10 */
+ background: -o-linear-gradient(top, #bbb 0%, #888 30%, #d6d6d6 50%, #d1d1d1 51%, #f0f0f0 100%);
+ background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#bbb), color-stop(30%,#888), color-stop(50%,#d6d6d6), color-stop(51%,#d1d1d1), color-stop(100%,#f0f0f0)); /* webkit */
+ display: none;
+}
+
+#mixer .upfader-slider .shade-top,
+#mixer .crossfader-slider .shade-top {
+ top: 0px;
+}
+
+#mixer .upfader-slider .shade-bottom,
+#mixer .crossfader-slider .shade-bottom {
+ top: 9px;
+ -moz-transform: rotate(180deg);
+ -webkit-transform: rotate(180deg);
+ -ms-transform: rotate(180deg);
+ -o-transform: rotate(180deg);
+ transform: rotate(180deg);
+}
+
+#mixer .upfader-slider .upfader-cover,
+#mixer .crossfader-slider .crossfader-cover {
+ /* mouse target element */
+ position: absolute;
+ left: 0px;
+ top: 0px;
+ width: 100%;
+ height: 100%;
+}
+
+#mixer .upfader-ui .rail,
+#mixer .crossfader-ui .rail {
+ position: absolute;
+ left: 50%;
+ top: 5px;
+ margin-left: -2px;
+ width: 5px;
+ height: 54px; /* ? */
+ background: rgba(0,0,0,0.25);
+ -moz-border-radius: 2px;
+ -webkit-border-radius: 2px;
+ border-radius: 2px;
+}
+
+#mixer .crossfader-ui .rail {
+ /* sideways, not vertical */
+ left: 0px;
+ top: 5px;
+ left: 0px;
+ width: 100%;
+ height: 5px;
+}
+
+#tt-1-pitch-box,
+#tt-2-pitch-box {
+ display: none;
+}
+
+/* scratch mode vs. non-scratch mode (features) */
+
+#tt-container .scratch-mode,
+#tt-container .scratch-mode-inline-block {
+ /* by default, hide things that need scratch mode. */
+ display: none;
+}
+
+#tt-container.scratch-mode .scratch-mode {
+ /* .. until it's enabled. */
+ display: block;
+}
+
+#tt-container.scratch-mode .scratch-mode-inline-block {
+ display: inline-block;
+}
+
+#control-strict-mode-box {
+ display: inline-block;
+ vertical-align: top;
+}
+
+#scratch-mode-box {
+ position: absolute;
+ left: 32px;
+ top: 0px;
+ margin-top: -1.5em;
+ height: 1em;
+ color: rgba(255,255,255,0.25);
+}
+
+#keycontrols {
+ margin: 2em 0px 0px 0px;
+ padding: 0px 0px 0px 1.75em;
+}
+
+#keycontrols li {
+ margin-bottom: 1em;
+}
+
+.keys b,
+.key {
+ display: inline-block;
+ padding: 2px 3px;
+ line-height: 1em;
+ font-weight: normal;
+ border: 1px solid rgba(255,255,255,0.25);
+ background-color: rgba(255,255,255,0.1);
+ color: #ccc;
+ -moz-border-radius: 5px;
+ -webkit-border-radius: 5px;
+ border-radius: 5px;
+ min-width: 1em;
+ text-align: center;
+}
+
+body .turntable .body,
+body #mixer {
+ -moz-transition: background-color 1s ease-in-out;
+ -ms-transition: background-color 1s ease-in-out;
+ -webkit-transition: background-color 1s ease-in-out;
+}
+
+body .turntable .platter .record .slipmat {
+ -moz-transition: opacity 1s ease-in-out;
+ -ms-transition: opacity 1s ease-in-out;
+ -webkit-transition: opacity 1s ease-in-out;
+}
+
+/* a few test skins/themes for the decks + mixer */
+
+body.yahoo .turntable .platter .record .slipmat-y {
+ background: transparent url(../image/slipmats/yahoo.jpg) no-repeat 50% 50%;
+ opacity: 0;
+}
+
+body.flickr #tt-1 .platter .record .slipmat-f {
+ background: transparent url(../image/slipmats/flickr_left.jpg) no-repeat 50% 50%;
+ opacity: 0;
+}
+
+body.flickr #tt-2 .platter .record .slipmat-f {
+ background: transparent url(../image/slipmats/flickr_right.jpg) no-repeat 50% 50%;
+ opacity: 0;
+}
+
+body.flickr .turntable .platter .record .slipmat,
+body.yahoo .turntable .platter .record .slipmat {
+ opacity: 0;
+}
+
+body.flickr #tt-1 .platter .record .slipmat-f,
+body.flickr #tt-2 .platter .record .slipmat-f,
+body.yahoo .turntable .platter .record .slipmat-y {
+ opacity: 1;
+}
+
+body.yahoo .turntable .body {
+ background-color: #602070;
+}
+
+body.yahoo #mixer {
+ background-color: #602070;
+}
+
+body.yahoo #mixer .pots li .pot {
+ background-color: #460262;
+ border: 1px solid #401545;
+}
+
+body.yahoo #mixer .pots li .pot.dragging,
+body.yahoo #mixer .pots li .pot:hover {
+ background-color: #350055;
+ border: 1px solid #A040B0;
+}
+
+body.yahoo #mixer .pots li .pot.dragging {
+ border: 1px solid #D060E0;
+}
+
+/* controls and other bits */
+
+#mixer-options {
+ opacity: 0.5;
+}
+
+#mixer-options:hover {
+ opacity: 1;
+}
+
+#controls,
+#moreinfo {
+ font-size: 1.1em;
+}
+
+#controls .controls-wrapper {
+ margin-top: 0.5em;
+}
+
+body.has_js #controls .controls-wrapper {
+ /* nested content */
+ height: 0px;
+ overflow: hidden;
+ opacity: 0;
+ -webkit-transition: all 0.25s ease-out;
+ -ms-transition: all 0.25s ease-out;
+ -moz-transition: all 0.25s ease-out;
+}
+
+body.has_js #controls.open .controls-wrapper {
+ height: auto;
+ opacity: 1;
+}
+
+#controls.open {
+ margin-bottom: 3em;
+ color: #999;
+}
+
+#controls.open #moreinfo {
+ color: #fff;
+}
+
+#controls .controls-wrapper-heading,
+#controls .controls-wrapper-content {
+ padding-left: 1em;
+}
+
+#controls .controls-wrapper-content {
+ padding-top: 1em;
+}
+
+#default-content,
+#controls .controls-wrapper-content {
+ -moz-border-radius: 3px;
+ -webkit-border-radius: 3px;
+ border-radius: 3px;
+ background-image: -webkit-gradient(
+    linear,
+    left top,
+    left bottom,
+    color-stop(0.25, rgba(255,255,255,0.075)),
+    color-stop(0.75, rgba(255,255,255,0.01))
+ );
+ background-image: -moz-linear-gradient(
+    center top,
+    rgba(255,255,255,0.075) 25%,
+    rgba(255,255,255,0.01) 75%
+ );
+ background-image: -ms-linear-gradient(
+    center top,
+    rgba(255,255,255,0.075) 25%,
+    rgba(255,255,255,0.01) 75%
+ );
+ background-image: -o-linear-gradient(
+    center top,
+    rgba(255,255,255,0.075) 25%,
+    rgba(255,255,255,0.01) 75%
+ );
+ padding-bottom: 0px;
+}
+
+#controls h1,
+#controls h2,
+#controls h3,
+#controls ul,
+#controls p {
+ max-width: 53em;
+}
+
+#default-content {
+ padding: 1em 1em 0px 1em;
+}
+
+#controls span.toggle,
+#controls span.toggle span,
+#moreinfo {
+ display: inline-block;
+ -webkit-transition: all 0.45s ease-in-out;
+ -ms-transition: all 0.45s ease-in-out;
+ -moz-transition: all 0.45s ease-in-out;
+}
+
+#controls h1,
+#controls h2,
+#controls h3,
+#controls h4,
+#controls h5 {
+ font: 200% helvetica,verdana,tahoma,arial,"sans serif";
+ font-weight: 300; /* well aren't you just modern. */
+ letter-spacing: -0.025em; /* ZOMG web x.0 */
+ color: rgba(128,192,255,0.9);
+ text-shadow: 0 1px 0 rgba(0,0,0,0.5);
+ margin-top: 1em;
+ margin-bottom: 1em;
+}
+
+#controls h1 {
+ margin-top: 0.5em;
+}
+
+#controls h2 {
+ font-size: 150%;
+ margin-bottom: 1em;
+}
+
+#controls h3 {
+ font-size: 125%;
+ color: rgba(255,255,255,0.6);
+}
+
+#controls p {
+ line-height: 1.5em;
+}
+
+#controls ul,
+#controls ol {
+ padding: 0px;
+ margin-left: 1.75em;
+}
+
+#controls li {
+ line-height: 1.5em;
+ margin-bottom: 1em;
+}
+
+#controls p,
+#controls li {
+ color: rgba(255,255,255,0.45);
+}
+
+#controls b {
+ color: rgba(255,255,255,0.55);
+ text-shadow: 0 1px 0 rgba(0,0,0,0.5);
+}
+
+#keycontrols b {
+ color: rgba(255,255,255,0.65);
+}
+
+#moreinfo {
+ display: inline;
+}
+
+#controls span.toggle span {
+ font-size: 20px;
+}
+
+#default-content h2 {
+ margin-top: 1.5em;
+}
+
+#controls.open span.toggle span {
+ -webkit-transform: rotate(180deg);
+ -moz-transform: rotate(180deg);
+ -ms-transform: rotate(180deg);
+ -o-transform: rotate(180deg);
+ transform: rotate(180deg);
+ color: #ccc;
+}
+
+.first-column {
+ position: relative;
+ float: left;
+ display: inline;
+ width: 31%;
+ padding-left: 0.5em;
+ padding-right: 1.5%;
+}
+
+.second-column {
+ float: left;
+ display: inline;
+ width: 31%;
+ border-left: 1px solid rgba(0,0,0,0.3);
+ padding-left: 1.5%;
+ padding-right: 1.5%
+}
+
+.third-column {
+ display: inline-block;
+ width: 30%;
+ border-left: 1px solid rgba(0,0,0,0.3);
+ padding-left: 1.5%;
+ padding-right: 1%;
+}
+
+#default-content h2,
+#controls h2 {
+ margin-top: 1.5em;
+}
+
+#default-content .first-column h2:first-child,
+#default-content .second-column h2:first-child,
+#default-content .third-column h2:first-child,
+#controls .first-column h2:first-child,
+#controls .second-column h2:first-child,
+#controls .third-column h2:first-child {
+ margin-top: 0px; /* argh */
+}
+
+/* UI info */
+
+#control-stats {
+ line-height: 34px; /* because of inline spinner .GIF, prevent shift when it disappears. */
+ padding: 0px;
+}
+
+#control-stats span.high-latency,
+#control-stats span.low-framerate {
+ color: #993333;
+ font-weight: bold;
+ cursor: help;
+}
+
+#control-stats .warning {
+ color: rgba(255,255,255,0.67);
+ background-color: rgba(255,32,32,0.33);
+ padding: 2px;
+}
+
+#control-stats .warning a {
+ color: rgba(255,255,255,0.9);
+ text-decoration: underline;
+}
+
+#control-stats .highlight {
+ background-color: rgba(32,128,255,0.33);
+ padding: 1px 3px;
+ vertical-align: top;
+ color: rgba(192,224,255,0.75);
+ font-weight: normal;
+ -webkit-border-radius: 2px;
+ -moz-border-radius: 2px;
+ border-radius: 2px;
+}
+
+#control-stats .highlight a {
+ font-weight: bold;
+ color: rgba(255,255,255,0.75);
+}
+
+form.loader-form {
+ position: absolute;
+ margin-left: 32px;
+ margin-top: 8px;
+}
+
+#loader-form-1 {
+ left: 68px;
+}
+
+#loader-form-2 {
+ left: 715px;
+}
+
+form.loader-form input {
+ -moz-transition: all 0.3s ease-in-out;
+ -ms-transition: all 0.3s ease-in-out;
+ -webkit-transition: all 0.3s ease-in-out;
+}
+
+form.loader-form input[type='text'] {
+ /* -webkit-appearance: textfield; */
+ background-color: rgba(0,0,0,0.25);
+ color: #666;
+ border: 1px groove #999;
+ -webkit-border-radius: 2px;
+ -moz-border-radius: 2px;
+ border-radius: 2px;
+ font-size:x-small;
+ width: 30em;
+}
+
+form.loader-form input[type='text']:hover,
+form.loader-form input[type='text']:focus {
+ background-color: rgba(0,0,0,0.75);
+ color: #ccc;
+}
+
+form.loader-form input[type='button'],
+form.loader-form input[type='submit'] {
+ opacity: 0;
+}
+
+form.loader-form:hover input[type='button'],
+form.loader-form.focused input[type='button'],
+form.loader-form.focused input[type='submit'] {
+ opacity: 1;
+}
+
+form.loader-form input[type='url']:focus {
+ background-color: rgba(0,0,0,0.5);
+ border-color: #ccc;
+ color: #ccc;
+}
+
+/*
+ * Extra demo stuffs
+*/
+
+#social-crap {
+ position: absolute;
+ left: 0px;
+ top: 0px;
+ width: 100%;
+ text-align: center;
+ margin-top: -1.5em;
+ font-size: 16px;
+ font-weight:bold; 
+}
+
+#social-crap a {
+ display: inline-block;
+ padding: 3px;
+ width: 12px;
+ height: 12px;
+ line-height: 12px;
+ overflow: hidden;
+ border: 1px solid rgba(0,0,0,0.25);
+ background-color: rgba(255,255,255,0.25);
+ color: rgba(255,255,255,0.33);
+ -moz-border-radius: 6px;
+ -webkit-border-radius: 6px;
+ border-radius: 6px;
+ background-clip: padding-box; /* restrict bg color to inside border */
+ -moz-transition: all 0.2s ease-out;
+ -ms-transition: all 0.2s ease-out;
+ -webkit-transition: all 0.2s ease-out;
+ vertical-align: middle;
+}
+
+#social-crap a.tweeter {
+ background-color: rgba(34,153,204,0.33);
+}
+
+#social-crap a.bookface {
+ line-height: 18px;
+ background-color: rgba(0,51,153,0.5);
+}
+
+#social-crap a:hover {
+ background-color: #003399;
+ color: #fff;
+}
+
+#social-crap a.tweeter:hover {
+ background-color: #2299cc;
+}
+
+#control-stats .no-scratch-mode .scratch-mode {
+ display: none;
+}
+
+#controls hr {
+ margin: 1.5em 0px 1em 0px;
+ padding: 0px;
+ border: 1px solid #333;
+}
+
+#tunes p {
+ line-height: 1.5em;
+}
+
+#tunes a:focus,
+#tunes a:visited {
+ background-color: transparent;
+}
+
+#the-music {
+ padding-bottom: 1em;
+}
+
+#the-music a span.artist {
+ font-weight: normal;
+ color: rgba(255,255,255,0.5);
+}
+
+#the-music a.loading {
+ background: transparent url(../image/icon_loading_spinner_line.gif) no-repeat 100% 50%;
+ color: rgba(255,255,255,0.25);
+ padding-right: 20px;
+}
+
+#the-music a.active {
+ color: #fff;
+}
+
+#default-content h2 {
+ font-weight: 300;
+ color: rgba(255,255,255,0.6);
+}
+
+#default-content h2 a {
+ font-weight: 300;
+}
+
+#default-content ol,
+#default-content ul {
+ margin: 0px;
+ padding: 0px;
+ padding-left: 20px;
+ list-style-type: none;
+}
+
+#default-content li {
+ background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAFUSURBVHjaYvz//z8DDDAyMrJyc3Pb//nzJ+jv37/GQKwIEmdmZr4PxGdZWFjWff369SBQz2+YHoAAYgAZAMKcnJzS7OzsU4CGvAOK/8eGQXIgNSC1MH0AAQQmuLi4pNjY2Dbg0oiOQWpBekB6AQII5AgWoKmTidUMw1A9LAABxMDBweEEdNonUg0A6QHpBQggFqAzQoGYlwEJCAoKMgQFBTHY2tqC+YcPH2ZYt24dw/v375HDjhekFyCAWEChzYAGQJpjYmLgfHl5eTA9d+5cFHUgvQABxAQkFNANgNns6OgIxshiaAYoAAQQEwOFACCAWIAJ5AEw4YgiC4L8DHL2/v37UcTQAUgvQAAxs7KyGgGdYoIs8eDBA4bfv38z8PPzM3z8+JFhy5Yt4ED88eMHigFAvZsBAojiaAQIIIoTEkAAUZyUAQKI4swEEECMlGZngAADAGI6/fAL5/ZGAAAAAElFTkSuQmCC) no-repeat 0px 0px;
+ padding-left: 22px;
+ line-height: 16px;
+ margin: 0.5em 0px 0.5em -22px;
+}
+
+#the-end {
+ padding: 1em 0.5em 0.5em 3em;
+ background-image: -webkit-gradient(
+    linear,
+    left top,
+    left bottom,
+    color-stop(0, rgb(8,16,32)),
+    color-stop(0.25, rgb(8,8,8))
+ );
+ background-image: -moz-linear-gradient(
+    center top,
+    rgb(8,16,32) 0%,
+    rgb(8,8,8) 25%
+ );
+ background-image: -ms-linear-gradient(
+    center top,
+    rgb(8,16,32) 0%,
+    rgb(8,8,8) 25%
+ );
+ background-image: -o-linear-gradient(
+    center top,
+    rgb(8,16,32) 0%,
+    rgb(8,8,8) 25%
+ );
+}
+
+/*
+ SoundManager 2 + useFlashBlock
+ Flash positioning and flashblock / clicktoflash handling
+*/
+
+#sm2-container {
+ /*
+  where the SM2 flash movie goes. by default, relative container.
+  set relative or absolute here, and don't touch it later or bad things will happen (see below comments.)
+ */
+ position:relative;
+ width:1px;
+ height:1px;
+ _overflow:hidden; /* screw IE 6, just make it display nice */
+}
+
+#sm2-container object,
+#sm2-container embed {
+ /*
+  the actual movie bit.
+  SWF needs to be able to be moved off-screen without display: or position: changes. important.
+  changing display: or position: or overflow: here or on parent can cause SFW reload or other weird issues after unblock,
+  eg. SM2 starts but strange errors, no whileplaying() etc.
+ */
+ position:absolute;
+}
+
+#sm2-container object,
+#sm2-container embed,
+#sm2-container.swf_timedout,
+#sm2-container.swf_timedout object,
+#sm2-container.swf_timedout embed {
+ /* 
+  when SM2 didn't start normally, time-out case. flash blocked, missing SWF, no flash?
+  48px square flash placeholder is typically used by blockers.
+ */
+ left:auto;
+ top:auto;
+ width:48px;
+ height:48px;
+}
+
+#sm2-container.swf_unblocked {
+ /* SWF unblocked, or was never blocked to begin with; try to collapse container as much as possible. */
+ width:1px;
+ height:1px;
+}
+
+#sm2-container.swf_loaded object,
+#sm2-container.swf_loaded embed,
+#sm2-container.swf_unblocked object,
+#sm2-container.swf_unblocked embed {
+ /* hide flash off-screen (relative to container) when it has loaded OK */
+ left:-9999em;
+ top:-9999em;
+}
+
+#sm2-container.swf_error {
+ /* when there is a fatal error (flash loaded, but SM2 failed) */
+ display:none;
+}
+
+#sm2-container.high_performance {
+ /* "high performance" case: keep on-screen at all times */
+ position:absolute;
+ position:fixed;
+ overflow:hidden;
+ _top:-9999px; /* IE 6 hax, no position:fixed */
+ _left:-9999px;
+ bottom:0px;
+ left:0px;
+ /*
+  special case: show at first with w/h, hide when unblocked.
+  might be bad/annoying.
+ */
+ width:48px;
+ height:48px;
+ z-index:99; /* try to stay on top */
+}
+
+#sm2-container.high_performance.swf_loaded,
+#sm2-container.high_performance.swf_unblocked {
+ z-index:auto;
+}
+
+
+#sm2-container.high_performance.swf_loaded,
+#sm2-container.high_performance.swf_unblocked,
+#sm2-container.high_performance.swf_unblocked object,
+#sm2-container.high_performance.swf_unblocked embed {
+ /* 8x8px is required minimum to load in fx/win32 in some cases(?), 6x6+ good for fast performance, even better when on-screen via position:fixed */
+ width:8px;
+ height:8px;
+}
+
+#sm2-container.high_performance.swf_loaded {
+ /* stay bottom/left */
+ top:auto;
+ bottom:0px;
+ left:0px;
+}
+
+#sm2-container.high_performance.swf_loaded object,
+#sm2-container.high_performance.swf_loaded embed,
+#sm2-container.high_performance.swf_unblocked object,
+#sm2-container.high_performance.swf_unblocked embed {
+ /* high-performance case must stay on-screen */
+ left:auto;
+ top:auto;
+}
+
+#sm2-container.high_performance.swf_timedout {
+ z-index:99; /* try to stay on top */
+}

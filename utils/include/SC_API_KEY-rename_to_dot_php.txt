@@ -1,0 +1,11 @@
+<?php
+
+  function get_soundcloud_api_key() {
+
+    // your soundcloud API key goes here.
+
+    return "MY_SOUNDCLOUD_API_KEY";
+
+  }
+
+?>

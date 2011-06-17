@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+
+<project name="SoundManager 2" default="build" basedir=".">
+
+  <property file='${basedir}/.build.properties'/>
+  <property name='mxmlc' value='mxmlc'/>
+  <property name='mtasc' value='mtasc'/>
+  <property name='closure-compiler.jar' value="${user.home}/compiler.jar"/>
+
+  <echo>${closure-compiler.jar}</echo>
+  <taskdef name="jscomp" classname="com.google.javascript.jscomp.ant.CompileTask" classpath="${closure-compiler.jar}"/>
+
+<target name="build">
+
+<echo>Compressing minified JS...</echo>
+
+<!--
+<exec executable="/bin/sh">
+ <arg line='-c "java -jar ~/yuicompressor-2.4.2.jar script/soundmanager2.js -o script/soundmanager2-jsmin.js"'/>
+</exec>
+-->
+
+<mkdir dir="tmp"/>
+<echo>Building debug version, Flash 10/AS3...</echo>
+
+<exec executable="${mxmlc}">
+ <arg line='-target-player=10.0.0 -debug=true -static-link-runtime-shared-libraries=true -optimize=true -o swf/soundmanager2_flash10_debug.swf -file-specs src/SoundManager2_AS3_Flash10.as'/>
+</exec>
+
+<echo>Making no-debug .AS...</echo>
+
+<mkdir dir="tmp/soundmanager2_flash_nodebug"/>
+<copy todir="tmp/soundmanager2_flash_nodebug">
+    <fileset dir="src" includes="*.as"/>
+</copy>
+
+<!-- flash 10 debug: SoundManager2 -->
+
+<replace file="tmp/soundmanager2_flash_nodebug/SoundManager2_AS3_Flash10.as">
+    <replacefilter>
+	<replacetoken>public var debugEnabled: Boolean = true;</replacetoken>
+	<replacevalue>public var debugEnabled: Boolean = false;</replacevalue>
+    </replacefilter>
+    <replacefilter>
+	<replacetoken>flashDebug(</replacetoken>
+	<replacevalue>// flashDebug(</replacevalue>
+    </replacefilter>
+    <!-- <d> and </d> -->
+    <replacefilter>
+	<replacetoken>// &lt;d&gt;</replacetoken>
+	<replacevalue>/*</replacevalue>
+    </replacefilter>
+    <replacefilter>
+	<replacetoken>// &lt;/d&gt;</replacetoken>
+	<replacevalue>*/</replacevalue>
+    </replacefilter>
+    <replacefilter>
+	<replacetoken>writeDebug(</replacetoken>
+	<replacevalue>// writeDebug(</replacevalue>
+    </replacefilter>
+</replace>
+
+<!-- flash 10 debug: SMSound -->
+
+<replace file="tmp/soundmanager2_flash_nodebug/SoundManager2_SMSound_AS3_Flash10.as">
+    <replacefilter>
+	<replacetoken>flashDebug(</replacetoken>
+	<replacevalue>// flashDebug(</replacevalue>
+    </replacefilter>
+    <replacefilter>
+	<replacetoken>writeDebug(</replacetoken>
+	<replacevalue>// writeDebug(</replacevalue>
+    </replacefilter>
+    <!-- <d> and </d> -->
+    <replacefilter>
+	<replacetoken>// &lt;d&gt;</replacetoken>
+	<replacevalue>/*</replacevalue>
+    </replacefilter>
+    <replacefilter>
+	<replacetoken>// &lt;/d&gt;</replacetoken>
+	<replacevalue>*/</replacevalue>
+    </replacefilter>
+</replace>
+
+<echo>Building no-debug SWFs...</echo>
+
+<exec executable="${mxmlc}">
+ <arg line='-target-player=10.0.0 -static-link-runtime-shared-libraries=true -optimize=true -o swf/soundmanager2_flash10.swf -file-specs tmp/soundmanager2_flash_nodebug/SoundManager2_AS3_Flash10.as'/>
+</exec>
+
+</target>
+</project>

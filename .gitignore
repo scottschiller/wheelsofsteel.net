@@ -1,0 +1,7 @@
+.DS_Store
+*.json
+SC_API_KEY.php
+tunes/
+utils/waveform/cache/*.png
+utils/waveform/bin/optipng
+utils/waveform/bin/lame
