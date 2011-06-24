@@ -4024,7 +4024,7 @@ soundManager.onready(function() {
 
   if (urlParamsObj.skin) {
     try {
-      window.setSkin(urlParamsObj.skin);
+      wheelsofsteel.setSkin(urlParamsObj.skin);
     } catch(e) {
       // d'oh well
     }
