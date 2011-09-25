@@ -1,9 +1,10 @@
-/*
+/**
  * DJ Schill's adventures on the wheels of steel
+ * ------------------------------------------------------------
  * A browser-based turntable prototype / toy
  * (not for serious/skratch DJs given latency etc.)
  * Code is provided "as-is", unsupported and without warranty.
- * ------------------------------------------------------------
+ *
  * http://wheelsofsteel.net/
  * http://schillmania.com/content/entries/2011/wheels-of-steel/
  *
@@ -13,9 +14,9 @@
  * Hardware acceleration needed for a usable UI.
  * Scratch is laggy on Windows due to Flash/OS
  * latency (and/or I'm doing it wrong.)
-*/
+ */
 
-/*jslint white: false, onevar: false, undef: true, nomen: false, eqeqeq: true, plusplus: false, bitwise: true, regexp: false, newcap: true, immed: true */
+/* jslint white: false, onevar: false, undef: true, nomen: false, eqeqeq: true, plusplus: false, bitwise: true, regexp: false, newcap: true, immed: true */
 /*global window, turntables, soundManager, console, document, navigator, setTimeout, setInterval, clearInterval, Audio */
 
 (function(window){
@@ -59,11 +60,12 @@ var turntables = [],
     transform,
     prop,
     styles,
+    timer,
     wheelsofsteel = window.wheelsofsteel;
 
 utils = (function(){
 
-  // events, math and DOM stuffs.
+  // events, math and DOM normalization stuffs.
 
   var me = this,
       DEG2RAD = Math.PI/180,
@@ -324,7 +326,7 @@ if (!IS_SPECIAL_SNOWFLAKE && SCRATCH_MODE) {
 
 }
 
-var timer = (function() {
+timer = (function() {
 
   // main animation loop, fps tracking and so forth
 
@@ -343,11 +345,11 @@ var timer = (function() {
 
   this.fpsAverage = 29.999; // start optimistically.
 
-  /*
+  /**
    * hat tip: paul irish
    * http://paulirish.com/2011/requestanimationframe-for-smart-animating/
    * https://gist.github.com/838785
-  */
+   */
   requestAnimationFrame = (function(){
     return (
       USE_REQUEST_ANIMATION_FRAME ? (
@@ -385,10 +387,11 @@ var timer = (function() {
 
   function refreshFPS() {
 
+    var i;
     if (turntables[0].power.motor || turntables[1].power.motor) {
       fpsIntervalCount++;
       self.fpsAverage = parseInt(fpsCount/fpsIntervalCount, 10);
-      for (var i=turntables.length; i--;) {
+      for (i=turntables.length; i--;) {
         turntables[i].setRPM(self.fpsAverage);
       }
     }
@@ -408,7 +411,8 @@ var timer = (function() {
 
   this.refresh = function() {
 
-    for (var i=turntables.length; i--;) {
+    var i;
+    for (i=turntables.length; i--;) {
       turntables[i].refresh();
     }
     if (turntables[0].power.motor || turntables[1].power.motor) {
@@ -587,7 +591,11 @@ if (features.transform.prop) {
 
 function Turntable(oTT, sURL) {
 
-  // imagine a Technics 1200SL-MK3 turntable, or thereabouts. Might as well target the golden standard. ;)
+  /** 
+   * Turntable()
+   * -----------
+   * Imagine a Technics 1200SL-MK3 turntable, or thereabouts. Might as well target the golden standard. ;)
+   */
 
   var self = this,
       drag_timer,
@@ -737,7 +745,7 @@ function Turntable(oTT, sURL) {
       lastMouseX: 0,
       lastExec: 0,
       markers: [],  // equivalent to cue points
-      sizeLimit: (navigator.userAgent.match(/firefox/i) ? 32767 : 65535), // Firefox barfs on PNGs > 32K pixels on any side - meanwhile, "64K ought to be enough for anyone [else] :D"
+      sizeLimit: (navigator.userAgent.match(/firefox/i) ? 32767 : 65535), // Firefox barfs on PNGs bigger than 32K pixels on any side - meanwhile, "64K ought to be enough for anyone [else] :D"
       xOffset: 250, // half of the container
       offsetWidth: null,
       offsetHeight: null,
@@ -947,7 +955,7 @@ function Turntable(oTT, sURL) {
     var waveX = Math.floor(-(self.data.waveform.width*(self.data.sound.soundObject.position/self.data.sound.soundObject.durationEstimate)));
 
     if (!isNaN(waveX) && waveX !== self.data.waveform.lastX) {
-      self.dom.waveform.style.backgroundPosition = ((BATTLE_MODE && self.id === 'tt-2' ? +1 : +1) * (self.data.waveform.xOffset+waveX)) + 'px 0px';
+      self.dom.waveform.style.backgroundPosition = (self.data.waveform.xOffset+waveX) + 'px 0px';
       self.data.waveform.lastX = waveX;
     }
 
@@ -1031,9 +1039,9 @@ function Turntable(oTT, sURL) {
 
     self.dom.waveformImage.onload = function() {
 
+      var bgURL = 'transparent url('+this.src+') no-repeat '+self.data.waveform.xOffset+'px 0px';
       self.data.waveform.width = parseInt(this.width, 10);
       self.data.waveform.height = parseInt(this.height, 10);
-      var bgURL = 'transparent url('+this.src+') no-repeat '+self.data.waveform.xOffset+'px 0px';
       self.dom.waveform.style.background = bgURL;
       utils.addClass(self.dom.waveform, 'loaded');
       utils.addClass(self.dom.waveform2, 'loaded');
@@ -1070,20 +1078,13 @@ function Turntable(oTT, sURL) {
     }
 
     if (angle !== undefined && !isNaN(angle)) { // todo: fix bug: when mousedown() fires followed by no mousemove() during redraw, angle is undefined / NaN
-      /*
+      /**
        * a little hackish: restrict movement again.
        * check for weird angles - user not clicking on cartridge/needle assembly, but top of tonearm area etc. bad action.
-      */
+       */
       angle = Math.min(self.data.tonearm.angleMax + self.data.tonearm.angleToRecord + self.data.tonearm.driftMax, Math.max(0, angle)); // hack: 9 degrees ~= label radius
       self.setAngle(o, angle);
       self.data.tonearm.angle = angle;
-    } else {
-      // can occur if record not playing
-      /*
-      if (typeof console !== 'undefined' && typeof console.log !== 'undefined') {
-        console.warn('moveTonearm(): angle undefined?');
-      }
-      */
     }
 
   };
@@ -1122,10 +1123,6 @@ function Turntable(oTT, sURL) {
   };
 
   this.recordMouseDown = function(e) {
-
-    if (!isTouchDevice && e.button !== 0) {
-      // return true; // ignore right-click
-    }
 
     self.data.record.dragging = true;
 
@@ -1395,7 +1392,7 @@ function Turntable(oTT, sURL) {
       oldRate = self.data.record.velocity;
 
       // fake this a little bit.
-      self.data.record.velocity = howFarSinceLastMouseMove/(STRICT_MODE ? 2 : 2); // incorporate fpsAverage?
+      self.data.record.velocity = howFarSinceLastMouseMove/2; // incorporate fpsAverage?
 
       self.applyVelocity(self.data.record.velocity);
 
@@ -1484,10 +1481,6 @@ function Turntable(oTT, sURL) {
   };
 
   this.tonearmMouseDown = function(e) {
-
-    if (!isTouchDevice && e.button !== 0) {
-      // return true; // ignore right-click
-    }
 
     utils.getCoordsForDOM(self.dom.tonearm, self.data.tonearm);
 
@@ -1812,9 +1805,7 @@ function Turntable(oTT, sURL) {
         if (self.data.platter.velocity !== 0) {
 
           if (sound.readyState) {
-            if (SCRATCH_MODE) {
-              // self.applyBrakeEffect(true); // long brake sound effect
-            } else {
+            if (!SCRATCH_MODE) {
               sound.pause();
               self.stopEORSound();
             }
@@ -2048,7 +2039,8 @@ function Turntable(oTT, sURL) {
 
   this.destroyCuePoints = function() {
 
-    for (var i=self.data.record.cuePoints.length; i--;) {
+    var i;
+    for (i=self.data.record.cuePoints.length; i--;) {
       self.destroyCuePoint(i);
     }
     self.data.record.cuePoints = [];
@@ -2316,17 +2308,21 @@ function Turntable(oTT, sURL) {
 
 function Mixer() {
 
-  // imagine a Stanton SK-2f, with the buttery-smooth optical cross-fader - or, a Rane TTM-54. Both have their merits.
-  /*         :D
-   |------------|
-   |   o    o   |
-   |   o    o   |
-   |   o    o   |
-   |   +    +   |
-   |   |    |   |
-   |   --|--    |
-   |------------|
-  */
+  /**
+   * Mixer()
+   * -------
+   * Imagine a Stanton SK-2f, with the buttery-smooth optical cross-fader.
+   * ... Or, a Rane TTM-54. Both have their merits.
+   *         :D
+   * |------------|
+   * |   o    o   |
+   * |   o    o   |
+   * |   o    o   |
+   * |   +    +   |
+   * |   |    |   |
+   * |   --|--    |
+   * |------------|
+   */
 
   var self = this;
 
@@ -2874,7 +2870,7 @@ function Mixer() {
 
   } // Pot();
 
-  /*
+  /**
    * Mixer() ...
    */
 
@@ -3143,12 +3139,13 @@ function Mixer() {
   this.createPots = function() {
 
     var oContainers = self.dom.mixer.querySelectorAll('li');
+    var i, j;
 
     function potMade(oPot, oDomNode) {
         self.data.potsById[oDomNode.id] = oPot;
     }
 
-    for (var i=0, j=oContainers.length; i<j; i++) {
+    for (i=0, j=oContainers.length; i<j; i++) {
       self.data.pots.push(new Pot(oContainers[i], potMade));
     }
 
@@ -3157,12 +3154,13 @@ function Mixer() {
   this.createUpFaders = function() {
 
     var oContainers = self.dom.mixer.querySelectorAll('div.upfader');
+    var i, j;
 
     function upFaderMade(oUpFader, faderID) {
       self.data.upFadersById[faderID] = oUpFader;
     }
 
-    for (var i=0, j=oContainers.length; i<j; i++) {
+    for (i=0, j=oContainers.length; i<j; i++) {
       self.data.upFaders.push(new UpFader(oContainers[i], upFaderMade));
     }
 
@@ -3194,11 +3192,12 @@ function Mixer() {
 
 }
 
-/*
+/**
  * Main initialization
+ * -------------------
  * Hook off of soundManager.onready()
  * Create turntables + mixer objects, etc.
-*/
+ */
 
 soundManager.onready(function() {
 
@@ -3310,8 +3309,6 @@ soundManager.onready(function() {
         sc_cache[id].wheelsofsteel.url = scData.url;
         loadURL(sc_cache[id].wheelsofsteel.url, turntable, id); // left vs. right-click
       });
-    } else {
-      // d'oh!
     }
 
   }
@@ -3809,19 +3806,19 @@ soundManager.onready(function() {
 
   // assign key handlers
   keyData = {
-    /*
+    /**
      * structure assigned dynamically
      * eg.
      * ']' : { isDown: false} 
-    */
+     */
   };
 
-  /*
+  /**
    * Would love to use DOM3 keyLocation to determine left/right-ness
    * of keys like shift + ctrl, but this doesn't seem to be
    * implemented as of may 2011. http://unixpapa.com/js/key.html
    * IE implements shiftLeft / shiftRight, but nobody else does.
-  */
+   */
 
   var keyDownActions = {
 
