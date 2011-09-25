@@ -14,12 +14,6 @@
 
 <echo>Compressing minified JS...</echo>
 
-<!--
-<exec executable="/bin/sh">
- <arg line='-c "java -jar ~/yuicompressor-2.4.2.jar script/soundmanager2.js -o script/soundmanager2-jsmin.js"'/>
-</exec>
--->
-
 <mkdir dir="tmp"/>
 <echo>Building debug version, Flash 10/AS3...</echo>
 
@@ -87,6 +81,9 @@
 <exec executable="${mxmlc}">
  <arg line='-target-player=10.0.0 -static-link-runtime-shared-libraries=true -optimize=true -o swf/soundmanager2_flash10.swf -file-specs tmp/soundmanager2_flash_nodebug/SoundManager2_AS3_Flash10.as'/>
 </exec>
+
+<!-- cleanup -->
+<delete dir="tmp"/>
 
 </target>
 </project>
