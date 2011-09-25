@@ -1,9 +1,10 @@
-/*
+/**
  * DJ Schill's adventures on the wheels of steel
- * A browser-based turntable prototype / toy
- * (Not for serious/skratch DJs given latency etc.)
- * Code is provided "as-is", unsupported and without warranty.
  * ------------------------------------------------------------
+ * A browser-based turntable prototype / toy
+ * (not for serious/skratch DJs given latency etc.)
+ * Code is provided "as-is", unsupported and without warranty.
+ *
  * http://wheelsofsteel.net/
  * http://schillmania.com/content/entries/2011/wheels-of-steel/
  *
@@ -13,7 +14,7 @@
  * Hardware acceleration needed for a usable UI.
  * Scratch is laggy on Windows due to Flash/OS
  * latency (and/or I'm doing it wrong.)
-*/
+ */
 
 body {
  background: #111;
@@ -28,10 +29,10 @@ body {
 #tt-wrapper-wrapper {
  /* two levels deep? dumb - but here we are.. */
  position: relative;
- /*
+ /**
   * CC-licensed pattern: 334: Sunrise Alpha Texture by Patrick Hoesly on Flickr
   * http://www.flickr.com/photos/zooboing/4169915237/in/photostream/
- */
+  */
  background: #000 url(../image/patrick-hoesly-334-sunrise-alpha-texture-128-dark.png);
 }
 
@@ -120,16 +121,16 @@ a:hover {
 }
 
 .turntable {
-/*
- * let's try to draw one, why not.
- |-------------|
- |   /-----\ | |
- |  |      | | |
- | *\_____/ /  |
- | []__    #   |
- |-------------|
- * .. ehh, that didn't really work.
-*/
+ /**
+  * let's try to draw one, why not.
+  * |-------------|
+  * |   /-----\ | |
+  * |  |      | | |
+  * | *\_____/ /  |
+  * | []__    #   |
+  * |-------------|
+  * .. ehh, that didn't really work.
+  */
  position: relative;
  width: 575px;
  margin-top: 1em;
@@ -259,10 +260,10 @@ body.battle-style .turntable {
 }
 
 .turntable .platter .record .record-ui {
- /*
+ /**
   * record album art, if any, is applied here as a background image.
   * it should be scaled to the correct size.
- */
+  */
  -webkit-background-size: 326px 326px;
  -moz-background-size: 326px 326px;
  background-size: 326px 326px;
@@ -273,13 +274,13 @@ body.battle-style .turntable {
 }
 
 .turntable.tripmat .record .slipmat {
- /* 
+ /**
   * tripmat (2x2 soild line/moire pattern.) Like, woah, man.
- */
+  */
  background: #fff url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAF0lEQVR42k3BsQEAAACCIP9/2hwDIscBDwMB/5hvOLQAAAAASUVORK5CYII=);
- /*
- * 4x4 variant
- */
+ /**
+  * 4x4 variant
+  */
  /*
  background: #fff url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAGUlEQVR42pXIoQEAAACCMP5/Wsk2F4fCOLOBwgP92q0bBQAAAABJRU5ErkJggg==);
  */
@@ -1079,16 +1080,16 @@ body.battle-style #tt-container #tt-2 {
 }
 
 #mixer {
-/*         :D
- |------------|
- |   o    o   |
- |   o    o   |
- |   o    o   |
- |   +    +   |
- |   |    |   |
- |   --|--    |
- |------------|
-*/
+/**        :D
+ * |------------|
+ * |   o    o   |
+ * |   o    o   |
+ * |   o    o   |
+ * |   +    +   |
+ * |   |    |   |
+ * |   --|--    |
+ * |------------|
+ */
  position: absolute;
  left: 532px;
  bottom: 69px;
@@ -1861,9 +1862,9 @@ form.loader-form input[type='url']:focus {
  color: #ccc;
 }
 
-/*
+/**
  * Extra demo stuffs
-*/
+ */
 
 #social-crap {
  position: absolute;
@@ -2002,16 +2003,16 @@ form.loader-form input[type='url']:focus {
  );
 }
 
-/*
- SoundManager 2 + useFlashBlock
- Flash positioning and flashblock / clicktoflash handling
-*/
+/**
+ * SoundManager 2 + useFlashBlock
+ * Flash positioning and flashblock / clicktoflash handling
+ */
 
 #sm2-container {
- /*
-  where the SM2 flash movie goes. by default, relative container.
-  set relative or absolute here, and don't touch it later or bad things will happen (see below comments.)
- */
+ /**
+  * where the SM2 flash movie goes. by default, relative container.
+  * set relative or absolute here, and don't touch it later or bad things will happen (see below comments.)
+  */
  position:relative;
  width:1px;
  height:1px;
@@ -2020,12 +2021,12 @@ form.loader-form input[type='url']:focus {
 
 #sm2-container object,
 #sm2-container embed {
- /*
-  the actual movie bit.
-  SWF needs to be able to be moved off-screen without display: or position: changes. important.
-  changing display: or position: or overflow: here or on parent can cause SFW reload or other weird issues after unblock,
-  eg. SM2 starts but strange errors, no whileplaying() etc.
- */
+ /**
+  * the actual movie bit.
+  * SWF needs to be able to be moved off-screen without display: or position: changes. important.
+  * changing display: or position: or overflow: here or on parent can cause SFW reload or other weird issues after unblock,
+  * eg. SM2 starts but strange errors, no whileplaying() etc.
+  */
  position:absolute;
 }
 
@@ -2034,10 +2035,10 @@ form.loader-form input[type='url']:focus {
 #sm2-container.swf_timedout,
 #sm2-container.swf_timedout object,
 #sm2-container.swf_timedout embed {
- /* 
-  when SM2 didn't start normally, time-out case. flash blocked, missing SWF, no flash?
-  48px square flash placeholder is typically used by blockers.
- */
+ /**
+  * when SM2 didn't start normally, time-out case. flash blocked, missing SWF, no flash?
+  * 48px square flash placeholder is typically used by blockers.
+  */
  left:auto;
  top:auto;
  width:48px;
@@ -2073,10 +2074,10 @@ form.loader-form input[type='url']:focus {
  _left:-9999px;
  bottom:0px;
  left:0px;
- /*
-  special case: show at first with w/h, hide when unblocked.
-  might be bad/annoying.
- */
+ /**
+  * special case: show at first with w/h, hide when unblocked.
+  * might be bad/annoying.
+  */
  width:48px;
  height:48px;
  z-index:99; /* try to stay on top */
