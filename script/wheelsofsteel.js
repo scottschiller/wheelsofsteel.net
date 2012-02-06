@@ -482,17 +482,17 @@ timer = (function() {
     // This part is a big ugly mess of array concatenation and ternary checks, but whatever. It's all debug and stats crap. :D
 
     scratchWrapper = ['<span'+(!SCRATCH_MODE?' class="no-scratch-mode"':'')+'>','</span>'];
-    if (SCRATCH_MODE && !soundManager.html5Only && typeof soundManager.o._getDynamicSoundLatency !== 'undefined') {
-      sound1 = soundManager.o._getDynamicSoundLatency(turntables[0].data.sound.soundObject.sID);
-      sound2 = soundManager.o._getDynamicSoundLatency(turntables[1].data.sound.soundObject.sID);
+    if (SCRATCH_MODE && !soundManager.html5Only && typeof soundManager.getMovie(soundManager.id)._getDynamicSoundLatency !== 'undefined') {
+      sound1 = soundManager.getMovie(soundManager.id)._getDynamicSoundLatency(turntables[0].data.sound.soundObject.sID);
+      sound2 = soundManager.getMovie(soundManager.id)._getDynamicSoundLatency(turntables[1].data.sound.soundObject.sID);
       latency1 = parseInt(sound1, 10);
       latency2 = parseInt(sound2, 10);
       bad = ['<span class="high-latency" title="High latency for this browser/OS combo - likely a Flash/Windows limitation, sorry. :/">', '</span>'];
       latency = (latency1 > badLatency ? bad[0] : '') + (sound1 === 0 ? 'n/a' : latency1 + 'ms') + (latency1 > badLatency ? bad[1] : '') + ', ' + (latency2 > badLatency ? bad[0] : '') + (sound2 === 0 ? 'n/a' : latency2 + 'ms') + (latency2 > badLatency ? bad[1] : '');
     }
 
-    if (!soundManager.html5Only && soundManager.o._getMemoryUse !== 'undefined') {
-      ram = soundManager.o._getMemoryUse();
+    if (!soundManager.html5Only && soundManager.getMovie(soundManager.id)._getMemoryUse !== 'undefined') {
+      ram = soundManager.getMovie(soundManager.id)._getMemoryUse();
     }
 
     document.getElementById('control-stats').innerHTML = scratchWrapper[0] + [
@@ -573,7 +573,7 @@ if (features.transform.prop) {
   transform = features.transform.prop;
   styles = {
     css_2d: 'rotate(0deg)',
-    css_3d: 'rotate3d(0,0,0,0deg)'
+    css_3d: 'rotate3d(0,0,1,0deg)'
   };
 
   if (attempt(styles.css_3d)) {
@@ -783,7 +783,7 @@ function Turntable(oTT, sURL) {
   this.power = this.data.power; // convenience
 
   this.setAngle = (features.rotate.has3D ? function(o, nAngle) {
-    o.style[features.transform.prop] = 'rotate3d(0,0,0,'+nAngle+'deg)';
+    o.style[features.transform.prop] = 'rotate3d(0,0,1,'+nAngle+'deg)';
   } : function(o, nAngle) {
     o.style[features.transform.prop] = 'rotate('+nAngle+'deg)';
   });
@@ -1643,9 +1643,9 @@ function Turntable(oTT, sURL) {
   this.applyRate = function(sID, nRate) {
 
     if (!soundManager.html5Only) {
-      soundManager.o._setRate(self.data.sound.soundObject.sID, nRate);
+      soundManager.getMovie(soundManager.id)._setRate(self.data.sound.soundObject.sID, nRate);
       if (self.data.sound.eorSound) {
-        soundManager.o._setRate(self.data.sound.eorSound.sID, nRate);
+        soundManager.getMovie(soundManager.id)._setRate(self.data.sound.eorSound.sID, nRate);
       }
     }
 
@@ -2100,7 +2100,7 @@ function Turntable(oTT, sURL) {
   this.startDynamicSound = function() {
 
     if (SCRATCH_MODE && !soundManager.html5Only) {
-      soundManager.o._startDynamicSound(self.data.sound.soundObject.sID);
+      soundManager.getMovie(soundManager.id)._startDynamicSound(self.data.sound.soundObject.sID);
     }
 
   };
@@ -2108,7 +2108,7 @@ function Turntable(oTT, sURL) {
   this.setBlockSize = function(nBlockSize) {
 
     if (SCRATCH_MODE && !soundManager.html5Only) {
-      soundManager.o._setBlockSize(self.data.sound.soundObject.sID, nBlockSize);
+      soundManager.getMovie(soundManager.id)._setBlockSize(self.data.sound.soundObject.sID, nBlockSize);
     }
 
   };
@@ -2122,7 +2122,7 @@ function Turntable(oTT, sURL) {
         s[i].setPosition(0);
         s[i].stop();
         if (SCRATCH_MODE && !soundManager.html5Only) {
-          soundManager.o._stopDynamicSound(s[i].sID);
+          soundManager.getMovie(soundManager.id)._stopDynamicSound(s[i].sID);
         }
       }
     }
@@ -2158,7 +2158,7 @@ function Turntable(oTT, sURL) {
       onfinish: function() {
         if (SCRATCH_MODE && !soundManager.html5Only) {
           this.setPosition(0);
-          soundManager.o._startDynamicSound(this.sID);
+          soundManager.getMovie(soundManager.id)._startDynamicSound(this.sID);
         }
         this.play({
           onfinish: self.soundEvents.eor.onfinish // self-referential...
@@ -2755,7 +2755,7 @@ function Mixer() {
         that.data.outputValue = outValue;
 
         if (!soundManager.html5Only) {
-          soundManager.o._setEQ(that.data.turntableId, that.data.instance.dataEQOffset, outValue);
+          soundManager.getMovie(soundManager.id)._setEQ(that.data.turntableId, that.data.instance.dataEQOffset, outValue);
         }
 
       },
@@ -3125,11 +3125,11 @@ function Mixer() {
       self.eqEnabled = document.getElementById('use-eq').checked;
       if (!soundManager.html5Only) {
         if (self.eqEnabled) {
-          soundManager.o._enableEQ('turntableSound0');
-          soundManager.o._enableEQ('turntableSound1');
+          soundManager.getMovie(soundManager.id)._enableEQ('turntableSound0');
+          soundManager.getMovie(soundManager.id)._enableEQ('turntableSound1');
         } else {
-          soundManager.o._disableEQ('turntableSound0');
-          soundManager.o._disableEQ('turntableSound1');
+          soundManager.getMovie(soundManager.id)._disableEQ('turntableSound0');
+          soundManager.getMovie(soundManager.id)._disableEQ('turntableSound1');
         }
       }
     }, false);
@@ -4092,7 +4092,7 @@ window.setEQ = function(turntableID, eqIndex, eqInput) {
   }
 
   if (!soundManager.html5Only) {
-    soundManager.o._setEQ(ttID, eqIndex, outValue);
+    soundManager.getMovie(soundManager.id)._setEQ(ttID, eqIndex, outValue);
   }
 
   // enable or disable if all values are centered
@@ -4109,9 +4109,9 @@ window.setEQ = function(turntableID, eqIndex, eqInput) {
 
   if (!soundManager.html5Only) {
     if (isSet) {
-      soundManager.o._enableEQ(ttID);
+      soundManager.getMovie(soundManager.id)._enableEQ(ttID);
     } else {
-      soundManager.o._disableEQ(ttID);
+      soundManager.getMovie(soundManager.id)._disableEQ(ttID);
     }
   }
 
