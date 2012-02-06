@@ -166,8 +166,6 @@ body.battle-style .turntable {
  width: 500px;
  height: 375px;
  overflow: hidden;
- -moz-border-radius: 3px;
- -webkit-border-radius: 3px;
  border-radius: 3px;
 }
 
@@ -210,9 +208,6 @@ body.battle-style .turntable {
  height: 326px;
  margin-left: -163px;
  margin-top: -163px;
- -moz-border-radius: 163px;
- -webkit-border-radius: 163px;
- -o-border-radius: 163px;
  border-radius: 163px;
 }
 
@@ -236,9 +231,6 @@ body.battle-style .turntable {
  width: 100%;
  height: 100%;
  background: transparent none no-repeat 50% 50%;
- -webkit-border-radius: 326px;
- -o-border-radius: 326px;
- -moz-border-radius: 326px;
  border-radius: 326px;
 }
 
@@ -332,9 +324,6 @@ body.battle-style .turntable {
  margin-left: -46px;
  background: rgba(255,255,255,0.85);
  border: 1px solid rgba(0,0,0,0.03);
- -moz-border-radius: 45px;
- -webkit-border-radius: 45px;
- -o-border-radius: 45px;
  border-radius: 45px;
  /* in the event a background image is used... */
  /*
@@ -375,12 +364,7 @@ body.battle-style .turntable {
  background-image: -webkit-gradient(radial, 20% 20%, 0, 20% 20%, 8, from(#999), to(#666));
  */
  border: 1px solid rgba(0,0,0,0.15);
- -moz-box-shadow: 1px 1px 1px rgba(0,0,0,0.075);
- -webkit-box-shadow: 1px 1px 1px rgba(0,0,0,0.075);
  box-shadow: 1px 1px 1px rgba(0,0,0,0.075);
- -moz-border-radius: 5px;
- -webkit-border-radius: 5px;
- -o-border-radius: 5px;
  border-radius: 5px;
 }
 
@@ -651,8 +635,6 @@ body.battle-style .turntable {
 
 .turntable .pitch,
 .turntable .pitch .legend {
- -moz-border-radius: 1px;
- -webkit-border-radius: 1px;
  border-radius: 1px;
 }
 
@@ -707,7 +689,6 @@ body.battle-style .turntable {
  border-right: 1px solid rgba(255,255,255,0.5);
  padding: 1px 0px;
  -webkit-background-clip: padding-box;
- -webkit-border-radius: 2px;
  border-radius: 2px;
  background-clip: padding-box; /* restrict bg color to inside border */
  cursor: pointer;
@@ -840,8 +821,6 @@ body.battle-style .turntable {
  background: -ms-linear-gradient(top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.1) 100%); /* ie 10 */
  background: -o-linear-gradient(top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.1) 100%);
  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0.5)), color-stop(75%,rgba(0,0,0,0.5)), color-stop(100%,rgba(0,0,0,0.1))); /* webkit */
- -moz-border-radius: 3px;
- -webkit-border-radius: 3px;
  border-radius: 3px;
  padding-top: 1px;
  margin-left: 31px;
@@ -1097,8 +1076,6 @@ body.battle-style #tt-container #tt-2 {
  padding: 4px 4px 2px 4px;
  width: 141px; /* +1px for fx4? */
  z-index: 2; /* sit atop decks */
- -moz-border-radius: 1px;
- -webkit-border-radius: 1px;
  border-radius: 1px;
 }
 
@@ -1112,8 +1089,6 @@ body.battle-style #tt-container #mixer {
  margin-bottom: -6px;
  left: 538px;
  border: 1px solid rgba(0,0,0,0.25);
- -webkit-border-radius: 2px;
- -moz-border-radius: 2px;
  border-radius: 2px;
 }
 
@@ -1134,8 +1109,6 @@ body.battle-style #tt-container.scratch-mode #mixer {
  /* slight bg + border on body */
  margin: 0px auto 0.35em auto;
  background: rgba(255,255,255,0.02);
- -moz-border-radius: 2px;
- -webkit-border-radius: 2px;
  border-radius: 2px;
 }
 
@@ -1188,8 +1161,6 @@ body.battle-style #tt-container.scratch-mode #mixer {
  margin-left: -10px;
  background: #222 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NAREAAAQEMGm/fwPUcLYCq7qgV5IWCoVC4aEQgGcG1m1QSpkIHTsAAAAASUVORK5CYII=) no-repeat 50% 50%;
  border: 1px solid #111;
- -moz-border-radius: 15px;
- -webkit-border-radius: 15px;
  border-radius: 15px;
  cursor: pointer;
  cursor: -moz-grab;
@@ -1291,8 +1262,6 @@ body.battle-style #tt-container.scratch-mode #mixer {
  border-right: 1px solid rgba(255,255,255,0.5);
  padding: 1px 0px;
  -webkit-background-clip: padding-box;
- -webkit-border-radius: 2px;
- -moz-border-radius: 2px;
  border-radius: 2px;
  background-clip: padding-box; /* restrict bg color to inside border */
  cursor: pointer;
@@ -1406,8 +1375,6 @@ body.battle-style #tt-container.scratch-mode #mixer {
  width: 5px;
  height: 54px; /* ? */
  background: rgba(0,0,0,0.25);
- -moz-border-radius: 2px;
- -webkit-border-radius: 2px;
  border-radius: 2px;
 }
 
@@ -1474,8 +1441,6 @@ body.battle-style #tt-container.scratch-mode #mixer {
  border: 1px solid rgba(255,255,255,0.25);
  background-color: rgba(255,255,255,0.1);
  color: #ccc;
- -moz-border-radius: 5px;
- -webkit-border-radius: 5px;
  border-radius: 5px;
  min-width: 1em;
  text-align: center;
@@ -1599,8 +1564,6 @@ body.has_js #controls.open .controls-wrapper {
 
 #default-content,
 #controls .controls-wrapper-content {
- -moz-border-radius: 3px;
- -webkit-border-radius: 3px;
  border-radius: 3px;
  background-image: -webkit-gradient(
     linear,
@@ -1797,8 +1760,6 @@ body.has_js #controls.open .controls-wrapper {
  vertical-align: top;
  color: rgba(192,224,255,0.75);
  font-weight: normal;
- -webkit-border-radius: 2px;
- -moz-border-radius: 2px;
  border-radius: 2px;
 }
 
@@ -1832,8 +1793,6 @@ form.loader-form input[type='text'] {
  background-color: rgba(0,0,0,0.25);
  color: #666;
  border: 1px groove #999;
- -webkit-border-radius: 2px;
- -moz-border-radius: 2px;
  border-radius: 2px;
  font-size:x-small;
  width: 30em;
@@ -1887,8 +1846,6 @@ form.loader-form input[type='url']:focus {
  border: 1px solid rgba(0,0,0,0.25);
  background-color: rgba(255,255,255,0.25);
  color: rgba(255,255,255,0.33);
- -moz-border-radius: 6px;
- -webkit-border-radius: 6px;
  border-radius: 6px;
  background-clip: padding-box; /* restrict bg color to inside border */
  -moz-transition: all 0.2s ease-out;
