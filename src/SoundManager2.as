@@ -1,32 +1,32 @@
-/*
-   SoundManager 2: Javascript Sound for the Web
-   ----------------------------------------------
-   http://schillmania.com/projects/soundmanager2/
-
-   Copyright (c) 2007, Scott Schiller. All rights reserved.
-   Code licensed under the BSD License:
-   http://www.schillmania.com/projects/soundmanager2/license.txt
-
-   Flash 8 / ActionScript 2 version
-
-   Compiling AS to Flash 8 SWF using MTASC (free compiler - http://www.mtasc.org/):
-   mtasc -swf soundmanager2.swf -main -header 16:16:30 SoundManager2.as -version 8
-
-   ActionScript Sound class reference (Macromedia), documentation download:
-   http://livedocs.macromedia.com/flash/8/
-   Previously-live URL:
-   http://livedocs.macromedia.com/flash/8/main/wwhelp/wwhimpl/common/html/wwhelp.htm?context=LiveDocs_Parts&file=00002668.html
-
-   *** NOTE ON LOCAL FILE SYSTEM ACCESS ***
-
-   Flash security allows local OR network access, but not both
-   unless explicitly whitelisted/allowed by the flash player's
-   security settings.
-
-   To enable in-flash messaging for troubleshooting, pass debug=1 in FlashVars (within object/embed code)
-   SM2 will do this by default when soundManager.debugFlash = true.
-
-*/
+/**
+ * SoundManager 2: Javascript Sound for the Web
+ * ----------------------------------------------
+ * http://schillmania.com/projects/soundmanager2/
+ *
+ * Copyright (c) 2007, Scott Schiller. All rights reserved.
+ * Code licensed under the BSD License:
+ * http://www.schillmania.com/projects/soundmanager2/license.txt
+ *
+ * Flash 8 / ActionScript 2 version
+ *
+ * Compiling AS to Flash 8 SWF using MTASC (free compiler - http://www.mtasc.org/):
+ * mtasc -swf soundmanager2.swf -main -header 16:16:30 SoundManager2.as -version 8
+ *
+ * ActionScript Sound class reference (Macromedia), documentation download:
+ * http://livedocs.macromedia.com/flash/8/
+ * Previously-live URL:
+ * http://livedocs.macromedia.com/flash/8/main/wwhelp/wwhimpl/common/html/wwhelp.htm?context=LiveDocs_Parts&file=00002668.html
+ *
+ * *** NOTE ON LOCAL FILE SYSTEM ACCESS ***
+ *
+ * Flash security allows local OR network access, but not both
+ * unless explicitly whitelisted/allowed by the flash player's
+ * security settings.
+ *
+ * To enable in-flash messaging for troubleshooting, pass debug=1 in FlashVars (within object/embed code)
+ * SM2 will do this by default when soundManager.debugFlash = true.
+ *
+ */
 
 import flash.external.ExternalInterface; // woo
 
@@ -36,20 +36,21 @@ class SoundManager2 {
 
   function SoundManager2() {
 
-    var version = "V2.97a.20110123";
+    var version = "V2.97a.20111220";
     var version_as = "(AS2/Flash 8)";
 
-    /*
-    *  Cross-domain security options
-    *  HTML on foo.com loading .swf hosted on bar.com? Define your "HTML domain" here to allow JS+Flash communication to work.
-    *  // allow_xdomain_scripting = true;
-    *  // xdomain = "foo.com";
-    *  For all domains (possible security risk?), use xdomain = "*"; which ends up as System.security.allowDomain("*");
-    *  When loading from HTTPS, use System.security.allowInsecureDomain();
-    *  See "allowDomain (security.allowDomain method)" in Flash 8/AS2 liveDocs documentation (AS2 reference -> classes -> security)
-    *  download from http://livedocs.macromedia.com/flash/8/
-    *  Related AS3 documentation: http://livedocs.adobe.com/flash/9.0/ActionScriptLangRefV3/flash/system/Security.html#allowDomain%28%29
-    */
+    /**
+     *  Cross-domain security options
+     *  HTML on foo.com loading .swf hosted on bar.com? Define your "HTML domain" here to allow JS+Flash communication to work.
+     *  // allow_xdomain_scripting = true;
+     *  // xdomain = "foo.com";
+     *  For all domains (possible security risk?), use xdomain = "*"; which ends up as System.security.allowDomain("*");
+     *  When loading from HTTPS, use System.security.allowInsecureDomain();
+     *  See "allowDomain (security.allowDomain method)" in Flash 8/AS2 liveDocs documentation (AS2 reference -> classes -> security)
+     *  download from http://livedocs.macromedia.com/flash/8/
+     *  Related AS3 documentation: http://livedocs.adobe.com/flash/9.0/ActionScriptLangRefV3/flash/system/Security.html#allowDomain%28%29
+     */
+
     var allow_xdomain_scripting = false;
     var xdomain = "*";
 
@@ -135,10 +136,10 @@ class SoundManager2 {
           flashDebug('Testing Flash -&gt; JS...')
           if (!didSandboxMessage && sandboxType != 'remote' && sandboxType != 'localTrusted') {
             didSandboxMessage = true;
-            flashDebug('<br><b>Fatal: Security sandbox error: Got "' + sandboxType + '", expected "remote" or "localTrusted".<br>Additional security permissions need to be granted.<br>See <a href="http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html">flash security settings panel</a> for non-HTTP, eg. file:// use.</b><br>http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html');
+            flashDebug('<br><b>Fatal: Security sandbox error: Got "' + sandboxType + '", expected "remote" or "localTrusted".<br>Additional security permissions need to be granted.<br>See <a href="http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html">flash security settings panel</a> for non-HTTP, eg. file:// use.</b><br>http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html<br><br>You may also be able to right-click this movie and choose from the menu: <br>"Global Settings" -> "Advanced" tab -> "Trusted Location Settings"<br>');
           }
           var d = new Date();
-          ExternalInterface.call(baseJSController + "._externalInterfaceOK", d.getTime());
+          ExternalInterface.call(baseJSController + "._externalInterfaceOK", d.getTime(), version);
           if (!didSandboxMessage) {
             flashDebug('Flash -&gt; JS OK');
           }
@@ -184,11 +185,6 @@ class SoundManager2 {
           oSound.lastValues.position = nP;
           ExternalInterface.call(baseJSObject + "['" + oSound.sID + "']._whileplaying", nP);
           // if position changed, check for near-end
-          if (oSound.didJustBeforeFinish != true && oSound.loaded == true && oSound.justBeforeFinishOffset > 0 && nD - nP <= oSound.justBeforeFinishOffset) {
-            // fully-loaded, near end and haven't done this yet..
-            ExternalInterface.call(baseJSObject + "['" + oSound.sID + "']._onjustbeforefinish", (nD - nP));
-            oSound.didJustBeforeFinish = true;
-          }
         }
       }
     }
@@ -223,7 +219,6 @@ class SoundManager2 {
     var registerOnComplete = function(sID) {
       soundObjects[sID].onSoundComplete = function() {
         checkProgress();
-        this.didJustBeforeFinish = false; // reset
         ExternalInterface.call(baseJSObject + "['" + sID + "']._onfinish");
       }
     }
@@ -237,14 +232,22 @@ class SoundManager2 {
         s.lastValues.loops = 1;
       }
       s.start(nSecOffset, s.lastValues.nLoops || 1); // start playing at new position
-      if (isPaused) s.stop();
+      if (isPaused) {
+        s.stop();
+      }
     }
 
     var _load = function(sID, sURL, bStream, bAutoPlay, bCheckPolicyFile) {
       // writeDebug('_load(): '+sID+', '+sURL+', '+bStream+', '+bAutoPlay);
-      if (typeof bAutoPlay == 'undefined') bAutoPlay = false;
-      if (typeof bStream == 'undefined') bStream = true;
-      if (typeof bCheckPolicyFile == 'undefined') bCheckPolicyFile = false;
+      if (typeof bAutoPlay == 'undefined') {
+        bAutoPlay = false;
+      }
+      if (typeof bStream == 'undefined') {
+        bStream = true;
+      }
+      if (typeof bCheckPolicyFile == 'undefined') {
+        bCheckPolicyFile = false;
+      }
       // writeDebug('bStream: '+bStream);
       // writeDebug('bAutoPlay: '+bAutoPlay);
       // checkProgress();
@@ -254,7 +257,6 @@ class SoundManager2 {
       s.loaded = true;
       s.checkPolicyFile = bCheckPolicyFile;
       s.loadSound(sURL, bStream);
-      s.didJustBeforeFinish = false;
       if (bAutoPlay != true) {
         s.stop(); // prevent default auto-play behaviour
       } else {
@@ -274,21 +276,18 @@ class SoundManager2 {
       s.stop();
       s.loadSound(sURL, true);
       s.stop(); // prevent auto-play
-      s.didJustBeforeFinish = false;
     }
 
-    var _createSound = function(sID, justBeforeFinishOffset, loops, checkPolicyFile) {
+    var _createSound = function(sID, loops, checkPolicyFile) {
       var s = new Sound();
       if (!soundObjects[sID]) {
         sounds.push(sID);
       }
       soundObjects[sID] = s;
       s.setVolume(100);
-      s.didJustBeforeFinish = false;
       s.sID = sID;
       s.paused = false;
       s.loaded = false;
-      s.justBeforeFinishOffset = justBeforeFinishOffset || 0;
       s.checkPolicyFile = checkPolicyFile;
       s.lastValues = {
         bytes: 0,
@@ -300,7 +299,9 @@ class SoundManager2 {
     var _destroySound = function(sID) {
       // for the power of garbage collection! .. er, Greyskull!
       var s = (soundObjects[sID] || null);
-      if (!s) return false;
+      if (!s) {
+        return false;
+      }
       for (var i = 0; i < sounds.length; i++) {
         if (sounds[i] == sID) {
           sounds.splice(i, 1);
@@ -318,7 +319,6 @@ class SoundManager2 {
       } else {
         soundObjects[sID].stop();
         soundObjects[sID].paused = false;
-        soundObjects[sID].didJustBeforeFinish = false;
       }
     }
 

@@ -40,7 +40,8 @@ package {
 
   public class SoundManager2_AS3_Flash10 extends Sprite {
 
-    public var version:String = "V2.97a.20110123 + minor compatibility updates with V2.97a.20110918+DEV";
+    // Special case: Match SM2 JS version so it doesn't barf on compatibility check, despite that this is older code.
+    public var version:String = "V2.97a.20111220+DEV"; // "V2.97a.20110123 + minor compatibility updates with V2.97a.20110918+DEV";
     public var version_as:String = "(AS3/Flash 10)";
 
     /*
@@ -263,7 +264,7 @@ package {
         if (isFirstCall == true) {
           flashDebug('Testing Flash -&gt; JS...');
           var d: Date = new Date();
-          ExternalInterface.call(baseJSController + "._externalInterfaceOK", d.getTime());
+          ExternalInterface.call(baseJSController + "._externalInterfaceOK", d.getTime(), version);
           flashDebug('Flash -&gt; JS OK');
         } else {
           writeDebug('SM2 SWF ' + version + ' ' + version_as);
